@@ -136,6 +136,13 @@ a{color:var(--accent);text-decoration:none}
 .finance-row{align-items:stretch}
 .asset-rows{display:flex;flex-direction:column;gap:10px}
 .asset-rows .field{margin-bottom:0}
+/* 个人收支底栏：信用消费 + 现有资产强制两列等高 */
+.finance-bottom{display:flex;gap:var(--gap);align-items:stretch;margin-top:16px}
+.finance-bottom>.card{flex:1;min-width:0;display:flex;flex-direction:column}
+.finance-bottom>.card>h3{flex:0 0 auto}
+.finance-bottom>.card>div:last-child{flex:1;display:flex;flex-direction:column}
+.finance-bottom .asset-rows{flex:1;justify-content:flex-start}
+@media(max-width:760px){.finance-bottom{flex-direction:column}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow)}
 .card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
 .card h3 .ci{width:17px;height:17px;color:var(--accent)}
@@ -382,7 +389,13 @@ table.tbl th{color:var(--ink-2);font-weight:600;font-size:12px}
 .admin-list li:last-child{border-bottom:none}
 .admin-list .role{font-size:12px;padding:2px 8px;border-radius:10px;background:#f0f0f0;color:#666}
 .admin-list .role.admin{background:#e8f5e9;color:#2e7d32}
-@media (max-width:600px){ .admin-home{padding:22px;margin:5vh 16px} }
+.admin-list .acc-row{gap:10px;flex-wrap:wrap}
+.admin-list .acc-pwd{display:inline-flex;align-items:center;gap:6px;font-family:monospace;font-size:13px;background:var(--surface);padding:4px 8px;border-radius:8px;border:1px solid var(--line);color:var(--ink)}
+.admin-list .acc-pwd .masked{letter-spacing:2px}
+.admin-list .pwd-toggle{padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--card);display:inline-flex;align-items:center;justify-content:center}
+.admin-list .pwd-toggle:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.admin-list .pwd-toggle .ic{width:14px;height:14px}
+@media (max-width:600px){ .admin-home{padding:22px;margin:5vh 16px} .admin-list .acc-pwd{width:100%;margin-top:4px} }
 </style>
 </head>
 <body data-color="green">
@@ -449,17 +462,18 @@ function getAccounts(){ try{ return JSON.parse(localStorage.getItem(ACC_KEY)||'{
 function currentUser(){ try{ return JSON.parse(localStorage.getItem(USER_KEY)||'null'); }catch(e){ return null; } }
 function doLogin(name, pw){ name=(name||'').trim(); var a=getAccounts()[name]; if(!a||a.pw!==hashStr(pw)){ toast('账号或密码错误','err'); return false; } try{ localStorage.setItem(USER_KEY, JSON.stringify({name:name, role:a.role})); }catch(e){} return true; }
 function updatePassword(name, newPw){ var acc=getAccounts(); if(!acc[name]) return false; acc[name].pw=hashStr(newPw); acc[name].pwd=newPw; try{ localStorage.setItem(ACC_KEY, JSON.stringify(acc)); return true; }catch(e){ return false; } }
-function openChangePwModal(){ openModal('<div class="pw-form"><h3 style="margin-top:0">修改密码</h3><div class="field"><label>原密码</label><input id="cp_old" type="password" placeholder="请输入原密码"></div><div class="field"><label>新密码</label><input id="cp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="cp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+btn('保存新密码','changePwd','primary')+'</div></div>','修改登录密码'); }
+function openChangePwModal(){ openModal('<div class="pw-form"><h3 style="margin-top:0">修改密码</h3><div class="field"><label>原密码</label><input id="cp_old" type="password" placeholder="请输入原密码"></div><div class="field"><label>新密码</label><input id="cp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="cp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+'<button class="btn primary" data-form="changePwd">保存新密码</button>'+'</div></div>','修改登录密码'); }
 function openChangeNameModal(){ var u=currentUser(); openModal('<div class="pw-form"><h3 style="margin-top:0">修改登录账号</h3><p class="tiny" style="margin:-8px 0 12px">修改后将以新账号名登录，请牢记新账号名。</p><div class="field"><label>当前账号</label><input value="'+esc(u?u.name:'')+'" disabled></div><div class="field"><label>新账号名</label><input id="cn_new" placeholder="输入新账号名"></div><div class="center">'+btn('保存新账号','saveName','primary')+'</div></div>','修改登录账号'); }
-function openResetPwModal(targetName){ var t=targetName||''; openModal('<div class="pw-form"><h3 style="margin-top:0">重置账号密码</h3><p class="tiny" style="margin:-8px 0 12px">仅管理员可重置其他账号；留空账号表示重置当前登录账号。</p><div class="field"><label>目标账号</label><input id="rp_name" value="'+esc(t)+'" placeholder="输入账号名"></div><div class="field"><label>新密码</label><input id="rp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="rp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+btn('确认重置','resetPwd','primary')+'</div></div>','重置密码'); }
+function openResetPwModal(targetName){ var t=targetName||''; openModal('<div class="pw-form"><h3 style="margin-top:0">重置账号密码</h3><p class="tiny" style="margin:-8px 0 12px">仅管理员可重置其他账号；留空账号表示重置当前登录账号。</p><div class="field"><label>目标账号</label><input id="rp_name" value="'+esc(t)+'" placeholder="输入账号名"></div><div class="field"><label>新密码</label><input id="rp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="rp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+'<button class="btn primary" data-form="resetPwd">确认重置</button>'+'</div></div>','重置密码'); }
 function showLogin(){ var o=document.getElementById('loginOverlay'); if(o) o.classList.remove('hidden'); }
 function hideLogin(){ var o=document.getElementById('loginOverlay'); if(o) o.classList.add('hidden'); }
-function renderAdminView(){ var u=currentUser(); document.body.classList.add('admin-mode'); var acc=getAccounts(); var accList=Object.keys(acc).sort().map(function(n){ var a=acc[n]; return '<li class="acc-row"><span class="acc-name">'+esc(n)+'</span><span class="role '+(a.role==='admin'?'admin':'')+'">'+(a.role==='admin'?'管理员':'用户')+'</span><span class="acc-pwd">密码：'+esc(a.pwd!=null?a.pwd:'(未存明文)')+'</span>'+btn('重置密码','resetPw:'+n,'sm')+'</li>'; }).join(''); var html='<div class="admin-home"><div class="login-brand"><svg class="logo" viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="8" fill="var(--accent)"/><path d="M13 26c0-7 5-12 14-13-1 8-6 13-14 13z" fill="#fff"/><circle cx="27" cy="13" r="3" fill="var(--gold)"/></svg><div class="name">锦程 · 管理中心</div></div><h2>欢迎，管理员 '+esc(u.name)+'</h2><p class="muted">管理功能持续建设中，当前版本可先管理账号与安全。</p>'+
+function renderAdminView(){ var u=currentUser(); document.body.classList.add('admin-mode'); var acc=getAccounts(); var accList=Object.keys(acc).sort().map(function(n){ var a=acc[n]; var hasPwd=a.pwd!=null; var show=!!PWD_VISIBLE[n]; var pwdText=hasPwd?(show?esc(a.pwd):'<span class="masked">••••••</span>'):'(未存明文)'; var eyeIcon=show?ico('eyeOff'):ico('eye'); var pwdLine='<span class="acc-pwd">密码：'+pwdText+'<button class="pwd-toggle" data-action="togglePwd:'+n+'" title="'+(show?'隐藏':'显示')+'">'+eyeIcon+'</button></span>'; return '<li class="acc-row"><span class="acc-name">'+esc(n)+'</span><span class="role '+(a.role==='admin'?'admin':'')+'">'+(a.role==='admin'?'管理员':'用户')+'</span>'+pwdLine+btn('重置密码','resetPw:'+n,'sm')+'</li>'; }).join(''); var html='<div class="admin-home"><div class="login-brand"><svg class="logo" viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="8" fill="var(--accent)"/><path d="M13 26c0-7 5-12 14-13-1 8-6 13-14 13z" fill="#fff"/><circle cx="27" cy="13" r="3" fill="var(--gold)"/></svg><div class="name">锦程 · 管理中心</div></div><h2>欢迎，管理员 '+esc(u.name)+'</h2><p class="muted">管理功能持续建设中，当前版本可先管理账号与安全。</p>'+
   '<div style="margin-top:18px">'+btn('退出登录','logout','primary')+' '+btn('修改我的密码','changePw','')+'</div>'+
   '<div class="admin-section"><h3>账号列表</h3><ul class="admin-list">'+(accList||'<li class="empty">暂无账号</li>')+'</ul></div>'+
   '<div class="admin-section"><h3>数据安全</h3><div class="row" style="gap:10px;flex-wrap:wrap">'+btn('导出全站数据','exportJson','')+btn('导出账号备份','exportAccounts','')+'</div><p class="tiny" style="margin-top:8px">「导出全站数据」=业务数据；「导出账号备份」=账号列表（仅用户名+角色，不含密码）。</p></div>'+
   '</div>'; document.getElementById('detail').innerHTML=html; }
 
+var PWD_VISIBLE = {};
 const PROTO = location.protocol;
 const USE_API = (PROTO === 'http:' || PROTO === 'https:');
 const API = '';
@@ -550,7 +564,9 @@ const ICONS = {
   link:'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>',
   ai:'<path d="M12 3l1.6 3.8L18 8.4l-4.4 1.6L12 14l-1.6-4L6 8.4l4.4-1.6z"/><path d="M17 13l.9 2.1L20 16l-2.1.9L17 19l-.9-2.1L14 16l2.1-.9z"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>',
-  camera:'<path d="M3 7h4l2-2h6l2 2h4v12H3z"/><circle cx="12" cy="13" r="3.5"/>'
+  camera:'<path d="M3 7h4l2-2h6l2 2h4v12H3z"/><circle cx="12" cy="13" r="3.5"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>'
 };
 function ico(name, cls) {
 
@@ -1454,9 +1470,11 @@ function renderFinance() {
       ${(f.budgets || []).map(b => { const pct = b.limit ? Math.round(Number(b.spent || 0) / Number(b.limit) * 100) : 0; return `<div class="item" data-item-id="${b.id}"><div class="it-title">${esc(b.name || '预算')}<small>已用 ${money(b.spent || 0)} / 限额 ${money(b.limit)}</small></div><div class="bar" style="width:80px"><span style="width:${pct}%"></span></div>${editBtn('financeBudgets', b.id)}${delBtn('financeBudgets', b.id)}</div>`; }).join('') || ''}
       ${(f.goals || []).map(g => { const need = Math.max(0, Number(g.target || 0) - Number(g.saved || 0)); const pct = g.target ? Math.round(Number(g.saved || 0) / Number(g.target) * 100) : 0; return `<div class="item" data-item-id="${g.id}"><div class="it-title">${esc(g.name || '目标')}<small>已攒 ${money(g.saved || 0)} / 目标 ${money(g.target)} · 待筹 ${money(need)}</small></div><div class="bar gold" style="width:80px"><span style="width:${pct}%"></span></div>${editBtn('financeGoals', g.id)}${delBtn('financeGoals', g.id)}</div>`; }).join('') || emptyHint('暂无预算/目标')}
     `)}
-    ${card('信用消费账期', 'finance', `<div style="margin-bottom:8px">${addBtn('信用账户', 'financeCredits')}</div>${(f.credits || []).map(c => `<div class="item" data-item-id="${c.id}"><div class="it-title">${esc(c.platform || '信用')}<small>额度 ${money(c.limit)} · 已用 ${money(c.used || 0)} · 还款日 ${esc(c.due || '')} · 最低 ${money(c.min || 0)}</small></div>${editBtn('financeCredits', c.id)}${delBtn('financeCredits', c.id)}</div>`).join('') || emptyHint('暂无信用账户')}</div>`)}
-    ${card('现有资产', 'finance', `<div class="asset-rows"><div class="field"><label>线上资产</label><input id="as_online" type="number" value="${f.assets.online || 0}"></div><div class="field"><label>现金</label><input id="as_cash" type="number" value="${f.assets.cash || 0}"></div></div><div style="margin:8px 0">${addBtn('工资账户', 'financeSalary')}</div>${(f.assets.salary || []).map(s => `<div class="item" data-item-id="${s.id}"><div class="it-title">${esc(s.name || '工资')}<small>${money(s.amount)} · ${esc(s.cycle || '')}</small></div>${delBtn('financeSalary', s.id)}</div>`).join('') || emptyHint('暂无工资账户')}<div class="center" style="margin-top:8px">${btn('保存资产', 'saveAssets', 'primary')}</div>`)}
-  </div>`;
+    <div class="finance-bottom">
+    <div class="card"><h3>${ico('finance','ci')}信用消费账期</h3><div><div style="margin-bottom:8px">${addBtn('信用账户', 'financeCredits')}</div>${(f.credits || []).map(c => `<div class="item" data-item-id="${c.id}"><div class="it-title">${esc(c.platform || '信用')}<small>额度 ${money(c.limit)} · 已用 ${money(c.used || 0)} · 还款日 ${esc(c.due || '')} · 最低 ${money(c.min || 0)}</small></div>${editBtn('financeCredits', c.id)}${delBtn('financeCredits', c.id)}</div>`).join('') || emptyHint('暂无信用账户')}</div></div>
+    <div class="card"><h3>${ico('finance','ci')}现有资产</h3><div><div class="asset-rows"><div class="field"><label>线上资产</label><input id="as_online" type="number" value="${f.assets.online || 0}"></div><div class="field"><label>现金</label><input id="as_cash" type="number" value="${f.assets.cash || 0}"></div></div><div style="margin:8px 0">${addBtn('工资账户', 'financeSalary')}</div>${(f.assets.salary || []).map(s => `<div class="item" data-item-id="${s.id}"><div class="it-title">${esc(s.name || '工资')}<small>${money(s.amount)} · ${esc(s.cycle || '')}</small></div>${delBtn('financeSalary', s.id)}</div>`).join('') || emptyHint('暂无工资账户')}<div class="center" style="margin-top:8px">${btn('保存资产', 'saveAssets', 'primary')}</div></div></div>
+  </div>
+</div>`;
 }
 
 /* ===================== 奖励 ===================== */
@@ -1815,7 +1833,7 @@ async function handleForm(fBtn) {
     addCoins(bonus); save(); render(); toast('复盘完成 +' + bonus + ' 薯条', 'gold'); sproutSay(sproutOp('review')); return;
   }
   if (act === 'changePwd') {
-    const u = currentUser(); const oldPw = g('cp_old'), newPw = g('cp_new'), newPw2 = g('cp_new2');
+    const u = currentUser(); const oldPw = v('cp_old'), newPw = v('cp_new'), newPw2 = v('cp_new2');
     const acc = getAccounts();
     if (!u || !acc[u.name] || acc[u.name].pw !== hashStr(oldPw)) { toast('原密码错误', 'err'); return; }
     if (!newPw || newPw.length < 6) { toast('新密码至少6位', 'err'); return; }
@@ -1825,8 +1843,8 @@ async function handleForm(fBtn) {
   }
   if (act === 'resetPwd') {
     const me = currentUser(); if (!me || me.role !== 'admin') { toast('无权操作', 'err'); return; }
-    const target = (g('rp_name') || me.name).trim();
-    const newPw = g('rp_new'), newPw2 = g('rp_new2');
+    const target = (v('rp_name') || me.name).trim();
+    const newPw = v('rp_new'), newPw2 = v('rp_new2');
     const acc = getAccounts();
     if (!acc[target]) { toast('目标账号不存在', 'err'); return; }
     if (!newPw || newPw.length < 6) { toast('新密码至少6位', 'err'); return; }
@@ -1974,10 +1992,11 @@ async function handleAction(act, btn, e) {
     if (act === 'logout') { try { localStorage.removeItem(USER_KEY); } catch (e) {} location.reload(); return; }
     if (act === 'changePw') { openChangePwModal(); return; }
     if (act === 'changeName') { openChangeNameModal(); return; }
-    if (act === 'resetPw') { openResetPwModal(p[1] || ''); return; }
     if (act === 'exportAccounts') { exportAccounts(); return; }
   const p = act.split(':'); const head = p[0];
+    if (head === 'resetPw') { openResetPwModal(p[1] || ''); return; }
   const actId = () => { const i = act.indexOf(':', head.length + 1); return i < 0 ? '' : act.slice(i + 1); };
+  if (head === 'togglePwd') { PWD_VISIBLE[p[1]] = !PWD_VISIBLE[p[1]]; renderAdminView(); return; }
   if (head === 'go') { navigateTo(p[1]); sproutSay(pick(SPROUT_LINES[p[1]] || SPROUT_LINES.overview)); return; }
   if (head === 'add' || head === 'addT') { openAdd(p[1]); return; }
   if (head === 'edit') { openEdit(p[1], actId()); return; }
