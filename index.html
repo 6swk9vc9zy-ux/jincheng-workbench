@@ -129,6 +129,13 @@ a{color:var(--accent);text-decoration:none}
 .cols-4{grid-template-columns:repeat(4,1fr)}
 @media(max-width:1100px){.cols-3,.cols-4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr}}
+/* 设置页：卡片按内容高度，减少纵向空白 */
+.settings-grid{align-items:start}
+.settings-grid .card{height:auto}
+/* 个人收支底栏等高，资产改为纵向两行 */
+.finance-row{align-items:stretch}
+.asset-rows{display:flex;flex-direction:column;gap:10px}
+.asset-rows .field{margin-bottom:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow)}
 .card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
 .card h3 .ci{width:17px;height:17px;color:var(--accent)}
@@ -417,7 +424,7 @@ table.tbl th{color:var(--ink-2);font-weight:600;font-size:12px}
 
 
 <!-- 小树苗吉祥物 -->
-<div class="sprout" id="sprout" title="小树苗（拖动我 / 点我说话）">
+<div class="sprout" id="sprout" title="小树苗（拖动我 / 点我随机激励语录）">
   <svg viewBox="0 0 74 92" width="74" height="92" aria-hidden="true">
     <ellipse cx="37" cy="86" rx="26" ry="6" fill="rgba(0,0,0,.12)"/>
     <path d="M22 84 Q37 70 52 84 Q50 90 37 90 Q24 90 22 84Z" fill="#7a5a3a"/>
@@ -817,6 +824,23 @@ const SPROUT_OP = {
   checkin: ['签到成功，今天也在场。', '打卡！坚持本身就是奖励。'],
   review: ['复盘完成，思路更清了。', '写好啦，明天会更好。']
 };
+const SPROUT_MOTIVATION = [
+  '种一棵树最好的时间是十年前，其次是现在。',
+  '千里之行，始于足下。',
+  '不积跬步，无以至千里。',
+  '日拱一卒，功不唐捐。',
+  '每一次小的坚持，都是未来惊喜的伏笔。',
+  '慢慢来，才比较快。',
+  '你不需要很厉害才开始，但你需要开始才会很厉害。',
+  '今天的努力，是明天的实力。',
+  '专注当下，未来自然抵达。',
+  '星光不问赶路人，时光不负有心人。',
+  '保持节奏，比一时冲刺更重要。',
+  '微小的进步，也是进步。',
+  '做正确的事，然后耐心等待。',
+  '行动是治愈焦虑的良药。',
+  '每一个想要放弃的时刻，都是成长的开始。'
+];
 function sproutOp(op) { return pick(SPROUT_OP[op] || SPROUT_OP.save); }
 
 /* ---------- 小树苗说话 + 朗读 ---------- */
@@ -870,7 +894,7 @@ function attachSprout() {
     } else {
       spr.classList.add('shake');
       setTimeout(() => spr.classList.remove('shake'), 520);
-      sproutSay(pick(SPROUT_LINES[CURRENT] || SPROUT_LINES.overview));
+      sproutSay(pick(SPROUT_MOTIVATION));
     }
   };
   spr.addEventListener('pointerup', end);
@@ -1021,14 +1045,14 @@ function renderOverview() {
   return `
   <div class="view-head"><div><h1>概览</h1><div class="sub">${esc(p.motto)}</div></div>
     <div>${btn(ico('sprout') + ' 让小树苗读简报', 'sproutBrief', 'primary')}${btn(ico('calendar') + ' 签到打卡', 'checkin', 'gold')}</div></div>
+  ${card('今日简报', 'note', `<p class="muted" id="briefText">${esc(brief)}</p>`)}
   ${renderToday()}
   <div class="grid cols-2">
     ${card('收支速览', 'finance', `<div class="stat-grid"><div class="stat"><b class="c-inc">${money(inc)}</b><span>收入</span></div><div class="stat"><b class="c-exp">${money(exp)}</b><span>支出</span></div><div class="stat"><b>${money(inc - exp)}</b><span>结余</span></div><div class="stat"><b>${S.profile.coins}</b><span>薯条</span></div></div>`, '<span class="right">' + addBtn('记一笔', 'financeTx') + '</span>')}
     ${card('科研速览', 'research', `<div class="stat-grid"><div class="stat"><b>${papers}</b><span>文献</span></div><div class="stat"><b>${(S.research.tasks || []).length}</b><span>任务</span></div><div class="stat"><b>${(S.research.milestones || []).filter(m => m.done).length}/${(S.research.milestones || []).length}</b><span>里程碑</span></div><div class="stat"><b>${(S.research.manuscripts || []).length}</b><span>稿件</span></div></div>`, '<span class="right">' + btn('进入科研', 'go:research', 'sm') + '</span>')}
-    ${card('奖励速览', 'rewards', rw.length ? rw.map(r => `<div class="item"><span class="tag gold">${r.cost} 薯条</span><div class="it-title">${esc(r.name)}</div>${btn('兑换', 'exchange:' + r.id, 'sm primary')}</div>`).join('') : emptyHint('暂无奖励，去「奖励」里建一个'), '<span class="right">' + btn('进入奖励', 'go:rewards', 'sm') + '</span>')}
   </div>
   ${card('成就墙', 'ach', `<div class="ach-wall">${ACH_DEFS().map(d => { const u = S.achUnlocked[d.id]; return `<div class="ach ${u ? '' : 'locked'}">${u ? '' : ico('lock', 'a-lock')}${ico('trophy', 'a-ico')}<div class="a-name">${d.name}</div><div class="a-desc">${d.desc}</div></div>`; }).join('')}</div>`, '<span class="right">' + btn('查看全部', 'go:achievements', 'sm') + '</span>')}
-  ${card('今日简报', 'note', `<p class="muted" id="briefText">${esc(brief)}</p>`)}`;
+  ${card('奖励速览', 'rewards', rw.length ? rw.map(r => `<div class="item"><span class="tag gold">${r.cost} 薯条</span><div class="it-title">${esc(r.name)}</div>${btn('兑换', 'exchange:' + r.id, 'sm primary')}</div>`).join('') : emptyHint('暂无奖励，去「奖励」里建一个'), '<span class="right">' + btn('进入奖励', 'go:rewards', 'sm') + '</span>')}`;
 }
 
 /* ===================== 复盘 ===================== */
@@ -1423,7 +1447,7 @@ function renderFinance() {
     <div class="stat"><b>${money(inc - exp)}</b><span>结余</span></div>
     <div class="stat"><b>${money(assetTotal)}</b><span>总资产</span></div>
   </div>
-  <div class="grid cols-2" style="margin-top:16px">
+  <div class="grid cols-2 finance-row" style="margin-top:16px">
     ${card('收支流水', 'finance', tx.length ? `<table class="tbl"><tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th></th></tr>${tx.slice(0, 12).map(t => `<tr data-item-id="${t.id}"><td class="tiny">${fmtDate(t.date)}</td><td>${t.kind === 'income' ? '<span class="tag income">收入</span>' : '<span class="tag expense">支出</span>'}</td><td>${esc(t.cat || '')}</td><td class="${t.kind === 'income' ? 'c-inc' : 'c-exp'}">${money(t.amount)}</td><td>${editBtn('financeTx', t.id)}${delBtn('financeTx', t.id)}</td></tr>`).join('')}</table>${tx.length > 12 ? `<div class="tiny center">仅显示最近 12 条，共 ${tx.length} 条</div>` : ''}` : emptyHint('还没有流水'), '<span class="right">' + addBtn('记一笔', 'financeTx') + '</span>')}
     ${card('月度预算 / 储蓄目标', 'target', `
       <div style="margin-bottom:8px">${addBtn('预算', 'financeBudgets')}${addBtn('目标', 'financeGoals')}</div>
@@ -1431,7 +1455,7 @@ function renderFinance() {
       ${(f.goals || []).map(g => { const need = Math.max(0, Number(g.target || 0) - Number(g.saved || 0)); const pct = g.target ? Math.round(Number(g.saved || 0) / Number(g.target) * 100) : 0; return `<div class="item" data-item-id="${g.id}"><div class="it-title">${esc(g.name || '目标')}<small>已攒 ${money(g.saved || 0)} / 目标 ${money(g.target)} · 待筹 ${money(need)}</small></div><div class="bar gold" style="width:80px"><span style="width:${pct}%"></span></div>${editBtn('financeGoals', g.id)}${delBtn('financeGoals', g.id)}</div>`; }).join('') || emptyHint('暂无预算/目标')}
     `)}
     ${card('信用消费账期', 'finance', `<div style="margin-bottom:8px">${addBtn('信用账户', 'financeCredits')}</div>${(f.credits || []).map(c => `<div class="item" data-item-id="${c.id}"><div class="it-title">${esc(c.platform || '信用')}<small>额度 ${money(c.limit)} · 已用 ${money(c.used || 0)} · 还款日 ${esc(c.due || '')} · 最低 ${money(c.min || 0)}</small></div>${editBtn('financeCredits', c.id)}${delBtn('financeCredits', c.id)}</div>`).join('') || emptyHint('暂无信用账户')}</div>`)}
-    ${card('现有资产', 'finance', `<div class="grid2"><div class="field"><label>线上资产</label><input id="as_online" type="number" value="${f.assets.online || 0}"></div><div class="field"><label>现金</label><input id="as_cash" type="number" value="${f.assets.cash || 0}"></div></div><div style="margin-bottom:8px">${addBtn('工资账户', 'financeSalary')}</div>${(f.assets.salary || []).map(s => `<div class="item" data-item-id="${s.id}"><div class="it-title">${esc(s.name || '工资')}<small>${money(s.amount)} · ${esc(s.cycle || '')}</small></div>${delBtn('financeSalary', s.id)}</div>`).join('') || emptyHint('暂无工资账户')}<div class="center" style="margin-top:8px">${btn('保存资产', 'saveAssets', 'primary')}</div></div>`)}
+    ${card('现有资产', 'finance', `<div class="asset-rows"><div class="field"><label>线上资产</label><input id="as_online" type="number" value="${f.assets.online || 0}"></div><div class="field"><label>现金</label><input id="as_cash" type="number" value="${f.assets.cash || 0}"></div></div><div style="margin:8px 0">${addBtn('工资账户', 'financeSalary')}</div>${(f.assets.salary || []).map(s => `<div class="item" data-item-id="${s.id}"><div class="it-title">${esc(s.name || '工资')}<small>${money(s.amount)} · ${esc(s.cycle || '')}</small></div>${delBtn('financeSalary', s.id)}</div>`).join('') || emptyHint('暂无工资账户')}<div class="center" style="margin-top:8px">${btn('保存资产', 'saveAssets', 'primary')}</div>`)}
   </div>`;
 }
 
@@ -1452,7 +1476,7 @@ function renderRewards() {
 function renderSettings() {
   const s = S.settings, p = S.profile;
   return `<div class="view-head"><div><h1>设置</h1><div class="sub">个性化你的锦程工作台</div></div></div>
-  <div class="grid cols-2">
+  <div class="grid cols-2 settings-grid">
     ${card('个人资料', 'profile', `
       <div class="grid2"><div class="field"><label>昵称</label><input id="st_nick" value="${esc(p.nickname)}"></div><div class="field"><label>姓名</label><input id="st_name" value="${esc(p.name)}"></div></div>
       <div class="grid2"><div class="field"><label>性别</label><select id="st_gender">${['保密', '男', '女'].map(g => `<option ${p.gender === g ? 'selected' : ''}>${g}</option>`).join('')}</select></div><div class="field"><label>生日</label><input id="st_birth" type="date" value="${esc(p.birthday)}"></div></div>
@@ -1594,6 +1618,17 @@ function delColl(coll, id) {
   if (coll === 'inspCats') {
     if (id === 'c_def') { toast('默认分类不可删除', 'err'); return; }
     (S.inspiration.items || []).forEach(i => { if (i.cat === id) i.cat = 'c_def'; });
+  }
+  if (coll === 'workouts') {
+    const item = arr.find(x => x.id === id);
+    if (item) {
+      const rwcfg = S.settings.rewards || {};
+      const wcoin = item.coin != null ? item.coin : (rwcfg.workout != null ? rwcfg.workout : 20);
+      if (wcoin) addCoins(-wcoin);
+      if (item.activeDay && !(S.workouts || []).some(w => w.id !== id && w.activeDay === item.activeDay)) {
+        S.activeDays = (S.activeDays || []).filter(d => d !== item.activeDay);
+      }
+    }
   }
   const i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1);
   save(); render(); toast('已删除', 'ok'); sproutSay(sproutOp('del'));
@@ -1913,8 +1948,12 @@ async function handleForm(fBtn) {
     if (!id) S.rewards.edits = edits + 1;
     upsert(coll, id, obj); checkAch();
   } else if (coll === 'workouts') {
+    const rw = S.settings.rewards || {};
+    const wcoin = rw.workout != null ? rw.workout : 20;
+    obj.coin = wcoin;
+    obj.activeDay = today();
     upsert(coll, id, obj);
-    if (!isEdit) { const rw = S.settings.rewards || {}; addCoins(rw.workout != null ? rw.workout : 20); addXP(15); markActiveDay(today()); }
+    if (!isEdit) { addCoins(wcoin); addXP(15); markActiveDay(today()); }
   } else {
     upsert(coll, id, obj);
   }
@@ -1938,11 +1977,12 @@ async function handleAction(act, btn, e) {
     if (act === 'resetPw') { openResetPwModal(p[1] || ''); return; }
     if (act === 'exportAccounts') { exportAccounts(); return; }
   const p = act.split(':'); const head = p[0];
+  const actId = () => { const i = act.indexOf(':', head.length + 1); return i < 0 ? '' : act.slice(i + 1); };
   if (head === 'go') { navigateTo(p[1]); sproutSay(pick(SPROUT_LINES[p[1]] || SPROUT_LINES.overview)); return; }
   if (head === 'add' || head === 'addT') { openAdd(p[1]); return; }
-  if (head === 'edit') { openEdit(p[1], p[2]); return; }
-  if (head === 'del') { delColl(p[1], p[2]); return; }
-  if (head === 'done') { toggleDone(p[1], p[2]); return; }
+  if (head === 'edit') { openEdit(p[1], actId()); return; }
+  if (head === 'del') { delColl(p[1], actId()); return; }
+  if (head === 'done') { toggleDone(p[1], actId()); return; }
   if (head === 'exchange') { exchangeReward(p[1]); return; }
   if (head === 'tab') {
     if (p[1] === 'research') TAB.research = p[2];
@@ -2278,6 +2318,7 @@ function voiceToggle() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const inp = $('#aiInput');
   if (!SR) { toast('当前浏览器不支持语音输入，建议用 Chrome / Edge 桌面版', 'err'); return; }
+  if (!window.isSecureContext) { toast('语音输入需要 HTTPS 或 localhost 安全环境，请用线上链接打开', 'err'); return; }
   if (voiceOn) { try { voiceRec && voiceRec.stop(); } catch (e) {} voiceOn = false; render(); return; }
   try {
     voiceRec = new SR();
