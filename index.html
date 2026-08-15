@@ -1,0 +1,2316 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>锦程 · 个人成长工作台</title>
+<style>
+:root{
+  --accent:#2F4F3E;        /* 墨绿主色 */
+  --accent-soft:#3d6350;
+  --surface:#F5F1E8;       /* 米纸底 */
+  --surface-2:#FBF8F1;
+  --card:#FFFFFF;
+  --gold:#C9A227;          /* 赭金强调 */
+  --ink:#2b2a26;           /* 深字 */
+  --ink-2:#6b675d;
+  --line:#e4ddcd;          /* 浅描边 */
+  --line-2:#efe9da;
+  --danger:#b4533a;
+  --ok:#3f7d4e;
+  --warn:#c98a1e;
+  --shadow:0 1px 3px rgba(40,36,28,.08),0 8px 24px rgba(40,36,28,.06);
+  --radius:14px;
+  --gap:16px;
+  --pad:18px;
+  --sidebar-w:264px;
+}
+body[data-color="dai"]{--accent:#274059;--accent-soft:#365a78;}
+body[data-color="zhe"]{--accent:#8a5a2b;--accent-soft:#a06e38;}
+body[data-color="zi"]{--accent:#5b3a6b;--accent-soft:#744a87;}
+body.dark{
+  --surface:#222820; --surface-2:#262d24; --card:#2c332a;
+  --ink:#ECE7D8; --ink-2:#a8a290; --line:#3a423a; --line-2:#333a32;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+body[data-density="compact"]{--gap:10px;--pad:12px;--radius:11px;}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--surface); color:var(--ink); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,textarea,select{font-family:inherit;font-size:16px;color:inherit}
+a{color:var(--accent);text-decoration:none}
+::-webkit-scrollbar{width:0;height:0;background:transparent}
+*{scrollbar-width:none}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* 图标统一基准尺寸：凡是未显式指定上下文尺寸的图标都按 18px 渲染，
+   避免 SVG 无固有尺寸时在卡片标题、顶栏药丸、搜索结果等处被撑得过大（比例失调） */
+.ic{width:18px;height:18px;flex:0 0 auto;vertical-align:middle}
+
+/* 布局 */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;height:100vh;transition:grid-template-columns .25s}
+.app.collapsed{grid-template-columns:0 1fr}
+.sidebar{background:var(--surface-2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.sidebar.hide{transform:translateX(-100%);opacity:0;pointer-events:none}
+.main{display:flex;flex-direction:column;min-width:0;height:100vh;background:var(--surface)}
+
+/* 品牌 */
+.brand{display:flex;align-items:center;gap:10px;padding:16px var(--pad);border-bottom:1px solid var(--line-2)}
+.brand .logo{width:34px;height:34px;flex:0 0 auto}
+.brand .name{font-size:19px;font-weight:800;letter-spacing:2px}
+.brand .name small{display:block;font-size:10px;font-weight:500;letter-spacing:1px;color:var(--ink-2);opacity:.8}
+
+/* 个人资料卡 */
+.profile-card{margin:12px var(--pad);padding:14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow)}
+.profile-card .pc-top{display:flex;align-items:center;gap:10px}
+.profile-card .avatar{width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:0 0 auto}
+.profile-card .pc-name{font-weight:700;font-size:15px}
+.profile-card .pc-motto{font-size:12px;color:var(--ink-2);margin-top:2px}
+.profile-card .pc-stats{display:flex;gap:8px;margin-top:12px}
+.profile-card .pc-stat{flex:1;text-align:center;background:var(--surface);border-radius:10px;padding:6px 2px}
+.profile-card .pc-stat b{display:block;font-size:15px;color:var(--accent)}
+.profile-card .pc-stat span{font-size:10px;color:var(--ink-2)}
+
+/* 导航 */
+.nav{flex:1;overflow-y:auto;padding:6px 10px}
+.nav-group{margin:8px 0}
+.nav-group .ng-title{font-size:11px;letter-spacing:1px;color:var(--ink-2);padding:8px 10px 4px;font-weight:700;text-transform:none}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--ink);cursor:pointer;border:1px solid transparent;margin:2px 0;font-size:13.5px;transition:background .15s}
+.nav-item:hover{background:var(--surface)}
+.nav-item.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nav-item.active .ni-ico{color:#fff}
+.nav-item .ni-ico{width:18px;height:18px;color:var(--accent);flex:0 0 auto}
+.nav-item .ni-badge{margin-left:auto;font-size:11px;background:var(--gold);color:#3a2e08;border-radius:20px;padding:1px 7px;font-weight:700}
+.nav-item.active .ni-badge{background:rgba(255,255,255,.25);color:#fff}
+.side-foot{padding:10px var(--pad);font-size:11px;color:var(--ink-2);border-top:1px solid var(--line-2);line-height:1.5}
+
+/* 顶栏 */
+.topbar{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) var(--pad) 10px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.topbar .lv-badge{display:flex;align-items:center;gap:8px}
+.lv-ring{width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--gold) var(--p,0deg),var(--line) 0);display:flex;align-items:center;justify-content:center;position:relative}
+.lv-ring span{width:32px;height:32px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--accent)}
+.xpbar{flex:0 0 120px}
+.xpbar .xb-track{height:7px;background:var(--line);border-radius:6px;overflow:hidden}
+.xpbar .xb-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-soft));width:0}
+.xpbar .xb-num{font-size:10px;color:var(--ink-2);margin-top:2px;text-align:center}
+.tb-pill{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-weight:700;font-size:13px}
+.tb-pill .pi{width:15px;height:15px;color:var(--accent)}
+.tb-pill.coins{color:var(--gold)}
+.tb-search{flex:1;min-width:160px;position:relative}
+.tb-search input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--line);border-radius:20px;background:var(--card);outline:none}
+.tb-search input:focus{border-color:var(--accent)}
+.tb-search .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-2)}
+.tb-actions{display:flex;gap:6px;margin-left:auto}
+.icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.icon-btn:hover{background:var(--surface)}
+.icon-btn .ic{width:19px;height:19px}
+.icon-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* 内容区 */
+.detail{flex:1;overflow-y:auto;padding:var(--gap) var(--pad) calc(60px + env(safe-area-inset-bottom))}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:var(--gap);flex-wrap:wrap}
+.view-head h1{font-size:22px;margin:0;letter-spacing:1px}
+.view-head .sub{font-size:12px;color:var(--ink-2);margin-top:3px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--gap);border-bottom:1px solid var(--line);padding-bottom:8px}
+.tab{padding:7px 14px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab:hover{color:var(--accent)}
+
+/* 卡片栅格 */
+.grid{display:grid;gap:var(--gap)}
+.cols-2{grid-template-columns:repeat(2,1fr)}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.cols-3,.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow)}
+.card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+.card h3 .ci{width:17px;height:17px;color:var(--accent)}
+.card .ch-act{margin-left:auto;display:flex;gap:6px}
+.row{display:flex;align-items:center;gap:10px}
+.muted{color:var(--ink-2);font-size:12px}
+.tiny{font-size:11px;color:var(--ink-2)}
+.right{margin-left:auto}
+.center{text-align:center}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.empty{padding:24px;text-align:center;color:var(--ink-2);font-size:13px}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--accent);border-radius:6px}
+.bar.gold>span{background:var(--gold)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 9px;border-radius:20px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+.tag.gold{background:rgba(201,162,39,.14);color:var(--gold);border-color:transparent}
+.tag.accent{background:rgba(47,79,62,.1);color:var(--accent);border-color:transparent}
+.tag .dot{width:8px;height:8px;border-radius:50%}
+
+/* 列表项 */
+.item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);margin-bottom:8px}
+.item:hover{border-color:var(--accent)}
+.item.done{opacity:.6}
+.item.done .it-title{text-decoration:line-through}
+.it-title{font-weight:600;flex:1;min-width:0}
+.it-title small{display:block;font-weight:400;color:var(--ink-2);font-size:11px}
+.it-acts{display:flex;gap:4px;flex:0 0 auto}
+.mini{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.mini:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mini.danger{color:var(--danger)}
+.mini.danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+.mini .ic{width:15px;height:15px}
+.chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--card)}
+.chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chk .ic{width:14px;height:14px}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.gold{background:var(--gold);color:#3a2e08;border-color:var(--gold)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn .ic{width:15px;height:15px}
+
+/* 表单 */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink-2)}
+.field input,.field textarea,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.f-row{display:flex;gap:10px}
+.f-row>*{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* 弹窗 */
+.modal-root{position:fixed;inset:0;background:rgba(20,18,14,.42);display:none;align-items:flex-start;justify-content:center;z-index:900;padding:6vh 16px;overflow-y:auto}
+.modal-root.open{display:flex}
+#modalBox{background:var(--card);border-radius:18px;width:min(640px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);padding:20px 22px;animation:pop .18s ease}
+#modalBox.wide{width:min(820px,100%)}
+@keyframes pop{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-head h2{margin:0;font-size:18px}
+.modal-close{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--line-2)}
+
+/* toast */
+.toast-root{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:1200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:24px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .25s ease;max-width:80vw}
+.toast.ok{background:var(--ok)}
+.toast.gold{background:var(--gold);color:#3a2e08}
+.toast.err{background:var(--danger)}
+@keyframes tin{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* 小树苗 */
+.sprout{position:fixed;left:30px;bottom:30px;width:74px;height:92px;z-index:800;cursor:grab;touch-action:none;user-select:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.18));transition:opacity .3s}
+.sprout.dragging{cursor:grabbing}
+.sprout.hidden{opacity:0;pointer-events:none}
+.sprout .leaf{transform-origin:bottom center;animation:sway 3.4s ease-in-out infinite}
+.sprout .leaf.l2{animation-delay:.4s}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.sprout.shake{animation:shake .5s}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.sprout-bubble{position:fixed;z-index:801;max-width:230px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 13px;font-size:12.5px;box-shadow:var(--shadow);pointer-events:none;animation:tin .2s ease}
+.sprout-bubble::after{content:"";position:absolute;left:22px;bottom:-7px;width:12px;height:12px;background:var(--card);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+
+/* 搜索结果 */
+.search-pop{position:absolute;left:0;right:0;top:42px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);max-height:340px;overflow-y:auto;z-index:50;display:none}
+.search-pop.open{display:block}
+.search-pop .sp-item{padding:10px 12px;display:flex;gap:8px;align-items:center;cursor:pointer;border-bottom:1px solid var(--line-2)}
+.search-pop .sp-item:hover{background:var(--surface)}
+.search-pop .sp-item .sp-ico{width:15px;height:15px;color:var(--accent)}
+.search-pop .sp-kind{font-size:10px;color:var(--ink-2);margin-left:auto}
+
+/* 课程表 */
+.timetable{width:100%;border-collapse:collapse;font-size:12px}
+.timetable th,.timetable td{border:1px solid var(--line);padding:5px;text-align:center;vertical-align:top;height:54px}
+.timetable th{background:var(--surface-2);font-weight:600}
+.timetable td .course{background:var(--accent);color:#fff;border-radius:8px;padding:4px;cursor:pointer;font-size:11px;line-height:1.3}
+.timetable td .course .t{font-weight:700}
+.timetable td .course .r{opacity:.85}
+
+/* 书架 */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px}
+.book{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s}
+.book:hover{transform:translateY(-3px);border-color:var(--accent)}
+.book .cover{height:150px;background:linear-gradient(135deg,var(--accent),var(--accent-soft));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;text-align:center;padding:8px;position:relative}
+.book .cover img{width:100%;height:100%;object-fit:cover}
+.book .b-meta{padding:8px 10px}
+.book .b-title{font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book .b-status{position:absolute;top:6px;right:6px;font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(0,0,0,.45);color:#fff}
+.book .b-prog{height:5px;background:var(--line);margin-top:6px;border-radius:4px;overflow:hidden}
+.book .b-prog>span{display:block;height:100%;background:var(--gold)}
+
+/* 进度/数值 */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:760px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px}
+.stat b{font-size:20px;color:var(--accent);display:block}
+.stat span{font-size:11px;color:var(--ink-2)}
+
+/* 成就墙 */
+.ach-wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+.ach{text-align:center;padding:14px 8px;border:1px solid var(--line);border-radius:13px;background:var(--card);position:relative}
+.ach.locked{filter:grayscale(1);opacity:.5}
+.ach .a-ico{width:40px;height:40px;margin:0 auto 8px;color:var(--gold)}
+.ach .a-name{font-size:12px;font-weight:600}
+.ach .a-desc{font-size:10px;color:var(--ink-2);margin-top:3px}
+.ach .a-lock{position:absolute;top:8px;right:8px;width:14px;height:14px;color:var(--ink-2)}
+
+/* 表格 */
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+table.tbl th,table.tbl td{border-bottom:1px solid var(--line-2);padding:8px 6px;text-align:left}
+table.tbl th{color:var(--ink-2);font-weight:600;font-size:12px}
+
+/* 媒体缩略 */
+.media-thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
+.drop{border:1.5px dashed var(--line);border-radius:11px;padding:10px;text-align:center;color:var(--ink-2);font-size:12px;cursor:pointer;background:var(--surface)}
+.drop:hover{border-color:var(--accent)}
+
+/* 移动端 */
+@media(max-width:860px){
+  .app{grid-template-columns:0 1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);z-index:600;transition:transform .25s}
+  .app:not(.collapsed) .sidebar{transform:translateX(0)}
+  .app.collapsed .sidebar{transform:translateX(-105%)}
+  .topbar .lv-badge .xpbar{display:none}
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:550}
+.app:not(.collapsed) .scrim.show{display:block}
+
+/* AI 助手 */
+.ai-wrap{display:flex;flex-direction:column;gap:12px}
+.ai-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line-2);padding-bottom:8px}
+.ai-quick{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.ai-log{display:flex;flex-direction:column;gap:10px;max-height:48vh;overflow:auto;padding:4px 2px}
+.ai-msg{display:flex;flex-direction:column;gap:3px;max-width:92%}
+.ai-msg.user{align-self:flex-end;align-items:flex-end}
+.ai-msg.assistant{align-self:flex-start}
+.ai-role{font-size:11px;color:var(--ink-2)}
+.ai-bubble{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;font-size:13px}
+.ai-msg.user .ai-bubble{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ai-empty{color:var(--ink-2);font-size:13px;line-height:1.7;background:var(--surface-2);border:1px dashed var(--line);border-radius:12px;padding:16px}
+.ai-input{display:flex;flex-direction:column;gap:0}
+.ai-input textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink)}
+.ai-input textarea:focus{outline:none;border-color:var(--accent)}
+.ai-web{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer}
+.ai-web input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--accent);cursor:pointer}
+.ai-web .ic{width:16px;height:16px;color:var(--accent)}
+.ai-web span{font-weight:600}
+.ai-web-p{margin-left:auto;font-style:normal;font-size:12px;color:var(--ink-2)}
+.ai-src{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.ai-src-item{display:flex;flex-direction:column;gap:1px;text-decoration:none;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px;line-height:1.4}
+.ai-src-item:hover{border-color:var(--accent);background:var(--card)}
+.ai-src-item .ic{width:13px;height:13px;color:var(--accent);margin-bottom:2px}
+.ai-src-t{font-weight:600;color:var(--accent)}
+.ai-src-u{font-style:normal;color:var(--ink-2);font-size:11px;word-break:break-all}
+/* 实时热点：可点击跳转原文 */
+.news-title{color:var(--ink);font-weight:600;text-decoration:none;cursor:pointer}
+.news-title:hover{color:var(--accent);text-decoration:underline}
+.news-link{color:var(--accent);font-size:11px;text-decoration:none;margin-left:4px}
+.news-link:hover{text-decoration:underline}
+/* AI 助手：拍照预览 / 语音与拍照按钮 */
+.ai-tools{display:flex;gap:6px}
+.ai-photo{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px}
+.ai-photo img{max-width:96px;max-height:72px;border-radius:8px;border:1px solid var(--line)}
+.ai-photo-mini{max-width:160px;max-height:120px;border-radius:8px;margin-bottom:4px;border:1px solid var(--line);display:block}
+.icon-btn{padding:6px 10px;line-height:1}
+/* 今天要处理 置顶区 */
+.today-box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:var(--gap);box-shadow:var(--shadow)}
+.today-head{display:flex;align-items:center;gap:8px;font-size:15px;margin-bottom:8px}
+.today-head b{letter-spacing:1px}
+.today-count{margin-left:auto;font-size:12px;color:var(--ink-2);background:var(--surface);border-radius:20px;padding:2px 10px}
+.today-list{display:flex;flex-direction:column;gap:6px}
+.td-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;background:var(--surface)}
+.td-item.od{background:rgba(180,83,58,.08);border:1px solid rgba(180,83,58,.25)}
+.td-item .it-title{flex:1;min-width:0}
+.td-item.od .it-title small{color:var(--danger);font-weight:600}
+.today-empty{padding:10px;color:var(--ink-2);font-size:13px;text-align:center}
+.seed-banner{display:flex;align-items:center;gap:10px;background:rgba(201,162,39,.12);border:1px solid rgba(201,162,39,.3);color:var(--ink);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px}
+.tag.income{background:rgba(63,125,78,.14);color:var(--ok);border:1px solid rgba(63,125,78,.3)}
+.tag.expense{background:rgba(180,83,58,.14);color:var(--danger);border:1px solid rgba(180,83,58,.3)}
+.c-inc{color:var(--ok);font-weight:600}
+.c-exp{color:var(--danger);font-weight:600}
+
+.news-media{position:relative;margin-bottom:8px}
+.news-thumb{width:100%;height:130px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block;background:var(--surface-2)}
+.news-suit{position:absolute;right:8px;bottom:8px;font-size:11px;backdrop-filter:blur(2px)}
+.tag.ok{background:rgba(79,138,85,.16);color:#3f7a45;border-color:transparent}
+.tag.warn{background:rgba(200,150,40,.16);color:#9a7415;border-color:transparent}
+.tag.low{background:rgba(180,80,80,.16);color:#a14545;border-color:transparent}
+.ai-guide p{margin:8px 0;line-height:1.6}
+.ai-guide li{margin:6px 0 6px 18px;line-height:1.6}
+.ai-guide code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body data-color="green">
+<div class="scrim" id="scrim"></div>
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="8" fill="var(--accent)"/><path d="M13 26c0-7 5-12 14-13-1 8-6 13-14 13z" fill="#fff"/><circle cx="27" cy="13" r="3" fill="var(--gold)"/></svg>
+      <div class="name">锦程<small>JIN·CHENG 成长工作台</small></div>
+    </div>
+    <div id="profileCard"></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      数据键 muan_data_v2 · 单机离线可用<br>
+      file:// 走 localStorage · http(s):// 走 API
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar" id="topbar"></div>
+    <div class="detail scroll" id="detail"></div>
+  </main>
+</div>
+
+<div class="modal-root" id="modalRoot">
+  <div id="modalBox"></div>
+</div>
+<div class="toast-root" id="toastRoot"></div>
+
+<!-- 小树苗吉祥物 -->
+<div class="sprout" id="sprout" title="小树苗（拖动我 / 点我说话）">
+  <svg viewBox="0 0 74 92" width="74" height="92" aria-hidden="true">
+    <ellipse cx="37" cy="86" rx="26" ry="6" fill="rgba(0,0,0,.12)"/>
+    <path d="M22 84 Q37 70 52 84 Q50 90 37 90 Q24 90 22 84Z" fill="#7a5a3a"/>
+    <rect x="34" y="40" width="6" height="46" rx="3" fill="#4f7a4a"/>
+    <g class="leaf l1"><path d="M37 46 Q14 40 12 22 Q34 26 37 46Z" fill="#3f7d4e"/></g>
+    <g class="leaf l2"><path d="M37 46 Q60 40 62 22 Q40 26 37 46Z" fill="#4f8a55"/></g>
+    <path d="M37 44 Q33 30 37 18 Q41 30 37 44Z" fill="#5fa05f"/>
+    <circle cx="37" cy="16" r="4" fill="#6fb56f"/>
+  </svg>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ===================== 锦程 个人成长工作台 (IIFE) ===================== */
+/* ---------- 基础工具 ---------- */
+const KEY = 'muan_data_v2';
+const PROTO = location.protocol;
+const USE_API = (PROTO === 'http:' || PROTO === 'https:');
+const API = '';
+const $  = (sel, ctx) => (ctx || document).querySelector(sel);
+const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
+const uid = () => 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const now = () => new Date().toISOString();
+const fmtDate = (d) => d ? String(d).slice(0, 10) : '';
+const fmtTime = (t) => t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '';
+const fmtT = (d) => { const x = new Date(d); return x.toTimeString().slice(0, 5); };
+const pad2 = (n) => String(n).padStart(2, '0');
+const dtLocal = () => { const x = new Date(); return x.getFullYear() + '-' + pad2(x.getMonth()+1) + '-' + pad2(x.getDate()) + ' ' + pad2(x.getHours()) + ':' + pad2(x.getMinutes()); };
+const num = (n, d = 0) => { const v = Number(n) || 0; return d ? v.toFixed(d) : (Math.round(v * 100) / 100).toString(); };
+const money = (n) => '¥' + num(n, 2);
+
+function byPath(obj, path) {
+  return path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+}
+function setPath(obj, path, val) {
+  const ks = path.split('.'); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) { if (o[ks[i]] == null) o[ks[i]] = {}; o = o[ks[i]]; }
+  o[ks[ks.length - 1]] = val;
+}
+
+function mergeDeep(target, src) {
+  if (Array.isArray(src)) return deepClone(src);
+  if (src && typeof src === 'object') {
+    const out = (target && typeof target === 'object' && !Array.isArray(target)) ? target : {};
+    const keys = new Set([...Object.keys(out), ...Object.keys(src)]);
+    keys.forEach(k => { out[k] = mergeDeep(out[k], src[k]); });
+    return out;
+  }
+  return src === undefined ? target : src;
+}
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+/* ---------- 图标表 (SVG 字符串) ---------- */
+const ICONS = {
+  overview:'<path d="M3 13h8V3H3zM13 21h8V3h-8zM3 21h8v-6H3z"/>',
+  review:'<path d="M4 4h16v12H7l-3 3z"/><path d="M8 9h8M8 13h5"/>',
+  time:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  study:'<path d="M3 6l9-3 9 3-9 3z"/><path d="M6 9v6c0 1 3 2 6 2s6-1 6-2V9"/>',
+  course:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/>',
+  sport:'<circle cx="12" cy="5" r="2"/><path d="M12 7v6m0 0l-4 6m4-6l4 6M5 11l7 2 7-2"/>',
+  research:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4M9 11h4"/>',
+  inspiration:'<path d="M12 3a6 6 0 0 0-4 10c1 1 1 2 1 3h6c0-1 0-2 1-3a6 6 0 0 0-4-10zM9 20h6"/>',
+  reading:'<path d="M3 5h6a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H3zM21 5h-6a3 3 0 0 0-3 3v11a3 3 0 0 1 3-3h6z"/>',
+  news:'<path d="M4 4h13v16H4zM17 8h3v12H7"/><path d="M7 7h7M7 11h7M7 15h5"/>',
+  finance:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4a2 2 0 0 1 0 4H9"/>',
+  rewards:'<circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  ach:'<circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>',
+  check:'<path d="M5 13l4 4L19 7"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
+  moon:'<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1 1M18 18l1 1M19 5l-1 1M6 18l-1 1"/>',
+  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M9 20a3 3 0 0 0 6 0"/>',
+  sprout:'<path d="M12 22v-9M12 13C9 13 6 11 6 7c3 0 6 2 6 6M12 13c3 0 6-2 6-6-3 0-6 2-6 6"/>',
+  leaf:'<path d="M5 21c0-9 6-15 15-15 0 9-6 15-15 15zM5 21C9 17 13 13 19 9"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  refresh:'<path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6"/>',
+  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5L5 20"/>',
+  video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  star:'<path d="M12 3l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/>',
+  fire:'<path d="M12 22c4 0 7-3 7-7 0-4-3-6-3-9-2 2-3 3-3 5-2-1-3-3-3-5-3 3-4 6-4 9 0 4 3 7 6 7z"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/>',
+  trophy:'<circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  book:'<path d="M3 5h6a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H3zM21 5h-6a3 3 0 0 0-3 3v11a3 3 0 0 1 3-3h6z"/>',
+  flag:'<path d="M5 21V4h12l-2 4 2 4H5"/>',
+  note:'<path d="M5 3h10l4 4v14H5zM14 3v5h5"/>',
+  menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+  download:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+  heart:'<path d="M12 21C5 14 3 10 3 7a4 4 0 0 1 9-1 4 4 0 0 1 9 1c0 3-2 7-9 14z"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>',
+  profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  cloud:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9-2 4 4 0 0 1 1 10z"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  link:'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>',
+  ai:'<path d="M12 3l1.6 3.8L18 8.4l-4.4 1.6L12 14l-1.6-4L6 8.4l4.4-1.6z"/><path d="M17 13l.9 2.1L20 16l-2.1.9L17 19l-.9-2.1L14 16l2.1-.9z"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>',
+  camera:'<path d="M3 7h4l2-2h6l2 2h4v12H3z"/><circle cx="12" cy="13" r="3.5"/>'
+};
+function ico(name, cls) {
+
+  const p = ICONS[name] || ICONS.note;
+  return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+}
+let AI_PHOTO = null; // 拍照/上传图片（dataURL，仅会话内暂存，不持久化）
+let voiceRec = null; // Web Speech 识别实例
+let voiceOn = false; // 是否正在聆听
+function compressImage(src, max, cb) {
+  try {
+    const im = new Image();
+    im.onload = () => { let w = im.width, h = im.height; if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r); } const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h); cb(c.toDataURL('image/jpeg', 0.82)); };
+    im.onerror = () => cb(src);
+    im.src = src;
+  } catch (e2) { cb(src); }
+}
+
+/* ---------- 默认状态 ---------- */
+function DEFAULT_STATE() {
+  return {
+    version: 2,
+    profile: {
+      name: '我', nickname: '锦程小友', gender: '保密', birthday: '',
+      motto: '日拱一卒，功不唐捐。', level: 1, xp: 0, coins: 60, streak: 0,
+      lastCheckin: '', longestStreak: 0, joinedAt: today()
+    },
+    settings: {
+      dark: false, color: 'green', density: 'comfort', notifications: true, sound: true,
+      sitThreshold: 50, focusDuration: 25, remindLead: 10,
+      gh: { user: '', repo: '', token: '', path: 'backup/jincheng-backup.json' },
+      newsApi: '', ai: { api: '', key: '', model: '' }, searchApi: '', aiWeb: false
+    },
+    timeBlocks: [], todos: [], studyPlans: [],
+    courses: { periods: ['08:00','10:00','14:00','16:00','19:00'], grid: {}, homework: [] },
+    workouts: [],
+    finance: {
+      transactions: [], budgets: [], goals: [], big: [],
+      credits: [], assets: { online: 0, cash: 0, salary: [] }
+    },
+    research: {
+      papers: [], ideas: [], tasks: [], zotero: [], questions: '', milestones: [], risks: [], aiChat: [],
+      design: { approach: '', population: '', sampling: '', ethicsApproved: false, ethicsNo: '', ethicsDate: '', variables: [], methods: [] },
+      materials: [], manuscripts: []
+    },
+    inspiration: { categories: [{ id: 'c_def', name: '灵感', color: '#4f8a55' }], items: [] },
+    reading: { categories: [{ id: 'r_def', name: '未分类', color: '#8a8a8a' }], books: [], notes: [] },
+    news: { saved: [], tab: 'academic', updated: 0, autoCapture: false },
+    reviews: { daily: [], weekly: [], monthly: [] },
+    achievements: [], achUnlocked: {},
+    rewardPool: { tickets: 3, history: [] },
+    rewards: { list: [{ id: 'rw1', name: '一杯奶茶', cost: 30, desc: '犒劳自己' }, { id: 'rw2', name: '半天休息', cost: 50, desc: '彻底放松' }], edits: 0, history: [] },
+    character: { mood: 'happy', form: 'sprout' },
+    activeDays: [], log: []
+  };
+}
+
+function SEEDED_STATE() {
+  const s = DEFAULT_STATE();
+  const t = today();
+  const d = function(n){ const x = new Date(Date.now() + n * 86400000); return x.getFullYear() + '-' + pad2(x.getMonth() + 1) + '-' + pad2(x.getDate()); };
+  s.seededDemo = true;
+  s.todos = [
+    { id: uid(), title: '提交开题报告初稿给导师', cat: '科研', due: d(-3), done: false },
+    { id: uid(), title: '背 30 个考研核心词汇', cat: '学习', due: t, done: false },
+    { id: uid(), title: '给爸妈打个电话', cat: '生活', due: d(2), done: false },
+    { id: uid(), title: '读完《认知觉醒》第 5 章并写笔记', cat: '阅读', due: d(5), done: false },
+    { id: uid(), title: '晨间拉伸 10 分钟', cat: '健康', due: t, done: true }
+  ];
+  s.finance.transactions = [
+    { id: uid(), date: t, kind: 'income', cat: '工资', amount: 8000, note: '本月工资' },
+    { id: uid(), date: d(-1), kind: 'expense', cat: '餐饮', amount: 42.5, note: '午餐' }
+  ];
+  s.inspiration.items = [
+    { id: uid(), cat: 'c_def', text: '用「费曼技巧」复述今天学到的概念', created: t }
+  ];
+  s.timeBlocks = [
+    { id: uid(), start: '08:00', end: '09:30', title: '深度工作：论文写作', cat: '科研' }
+  ];
+  return s;
+}
+
+/* ---------- 迁移 + 深合并 ---------- */
+function migrate(s) {
+  s = mergeDeep(DEFAULT_STATE(), s || {});
+  s.version = 2;
+  if (!Array.isArray(s.inspiration.categories) || !s.inspiration.categories.length)
+    s.inspiration.categories = DEFAULT_STATE().inspiration.categories;
+  if (!Array.isArray(s.reading.categories) || !s.reading.categories.length)
+    s.reading.categories = DEFAULT_STATE().reading.categories;
+  if (!s.courses || !s.courses.periods) s.courses = DEFAULT_STATE().courses;
+  if (!s.finance || !s.finance.assets) s.finance = DEFAULT_STATE().finance;
+  if (!s.research || !s.research.design) s.research = mergeDeep(DEFAULT_STATE().research, s.research);
+  if (!s.rewardPool) s.rewardPool = DEFAULT_STATE().rewardPool;
+  if (!s.rewards) s.rewards = DEFAULT_STATE().rewards;
+  if (typeof s.settings.aiWeb !== 'boolean') s.settings.aiWeb = false;
+  if (typeof s.settings.searchApi !== 'string') s.settings.searchApi = '';
+  if (!s.achievements) s.achievements = [];
+  if (!s.activeDays) s.activeDays = [];
+  if (!s.log) s.log = [];
+  return s;
+}
+
+/* ---------- 存储 ---------- */
+let S = null;
+
+async function loadData() {
+  try {
+    if (USE_API) {
+      const r = await fetch(API + '/api/state', { method: 'GET', cache: 'no-store' });
+      if (r.ok) { const j = await r.json(); return migrate(j && j.data ? j.data : j); }
+    }
+  } catch (e) { /* 回退本地 */ }
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return migrate(JSON.parse(raw));
+  } catch (e) {}
+  return SEEDED_STATE();
+}
+
+async function save() {
+  S.log = (S.log || []).slice(-200);
+  S.log.push({ t: dtLocal(), m: 'save' });
+  try {
+    if (USE_API) {
+      await fetch(API + '/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: 2, data: S }) });
+      return;
+    }
+  } catch (e) { toast('API 保存失败，已回退本地', 'err'); }
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('本地存储失败', 'err'); }
+}
+
+/* 媒体：POST base64 到 /api/media，返回 url；否则返回 dataURL 直接内联 */
+async function saveMedia(dataUrl, kind) {
+  const ext = (dataUrl.match(/data:image\/(\w+)/) || dataUrl.match(/data:video\/(\w+)/) || [])[1] || 'png';
+  try {
+    if (USE_API) {
+      const r = await fetch(API + '/api/media', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: dataUrl, kind: kind || 'img', ext }) });
+      if (r.ok) { const j = await r.json(); if (j.url) return j.url; }
+    }
+  } catch (e) {}
+  return dataUrl; // 离线直接内联
+}
+/* ---------- 视图注册 ---------- */
+const VIEWS = [
+  { id: 'overview', name: '概览', icon: 'overview' },
+  { id: 'review', name: '复盘', icon: 'review' },
+  { id: 'time', name: '时间规划', icon: 'time' },
+  { id: 'study', name: '待办规划', icon: 'study' },
+  { id: 'course', name: '课程表', icon: 'course' },
+  { id: 'sport', name: '运动健身', icon: 'sport' },
+  { id: 'research', name: '科研进程', icon: 'research' },
+  { id: 'ai', name: 'AI 助手', icon: 'ai' },
+  { id: 'news', name: '实时热点', icon: 'news' },
+  { id: 'inspiration', name: '灵感素材', icon: 'inspiration' },
+  { id: 'reading', name: '阅读记录', icon: 'reading' },
+  { id: 'finance', name: '个人收支', icon: 'finance' },
+  { id: 'rewards', name: '奖励', icon: 'rewards' },
+  { id: 'settings', name: '设置', icon: 'settings' },
+  { id: 'achievements', name: '成就', icon: 'ach' }
+];
+const NAV_GROUPS = [
+  { title: '概览与记录', items: ['overview', 'review'] },
+  { title: '规划与时间', items: ['time', 'study', 'course', 'sport'] },
+  { title: '科研与产出', items: ['research', 'ai', 'news', 'inspiration', 'reading'] },
+  { title: '财务与激励', items: ['finance', 'rewards'] },
+  { title: '系统', items: ['settings', 'achievements'] }
+];
+let CURRENT = 'overview';
+let TAB = {}; // 各视图的子选项卡
+
+/* ---------- toast 轻提示 ---------- */
+function toast(msg, type) {
+  const root = $('#toastRoot');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.textContent = msg;
+  root.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2200);
+  setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 2600);
+}
+
+/* ---------- 游戏化三件套 ---------- */
+const levelReq = (lv) => 80 + (lv - 1) * 60;          // 升到下一等级所需 XP
+const levelProgress = () => { const need = levelReq(S.profile.level); return clamp(S.profile.xp / need, 0, 1); };
+
+function addXP(n) {
+  n = Math.round(Number(n) || 0); if (!n) return;
+  S.profile.xp += n;
+  let leveled = false;
+  while (S.profile.xp >= levelReq(S.profile.level)) {
+    S.profile.xp -= levelReq(S.profile.level);
+    S.profile.level += 1; leveled = true;
+  }
+  if (leveled) { toast('🌟 升级！当前 LV' + S.profile.level, 'gold'); sproutSay(pick(DIALOGS.levelUp)()); }
+  save(); renderTop(); renderProfile(); checkAch();
+}
+function addCoins(n) {
+  n = Math.round(Number(n) || 0); if (!n) return;
+  S.profile.coins += n;
+  save(); renderTop(); renderProfile();
+}
+function checkAch() {
+  const defs = ACH_DEFS();
+  defs.forEach(d => {
+    if (S.achUnlocked[d.id]) return;
+    let ok = false; try { ok = d.test(); } catch (e) { ok = false; }
+    if (ok) {
+      S.achUnlocked[d.id] = { at: today(), name: d.name };
+      toast('🏅 解锁成就：' + d.name, 'gold');
+      if (d.bonus) { if (d.bonus.xp) addXP(d.bonus.xp); if (d.bonus.coins) addCoins(d.bonus.coins); }
+    }
+  });
+  save(); renderProfile();
+}
+function ACH_DEFS() {
+  const read = (S.reading.books || []).filter(b => b.status === 'read').length;
+  const rev = (S.reviews.daily.length + S.reviews.weekly.length + S.reviews.monthly.length);
+  return [
+    { id: 'a_first', name: '启程', desc: '完成首次签到', test: () => S.profile.streak >= 1 || S.activeDays.length >= 1, bonus: { coins: 5 } },
+    { id: 'a_week', name: '七日之约', desc: '连续打卡 7 天', test: () => S.profile.streak >= 7, bonus: { coins: 20, xp: 20 } },
+    { id: 'a_month', name: '持之以恒', desc: '连续打卡 30 天', test: () => S.profile.streak >= 30, bonus: { coins: 50, xp: 50 } },
+    { id: 'a_rich', name: '小有积蓄', desc: '薯条达到 300', test: () => S.profile.coins >= 300, bonus: { xp: 20 } },
+    { id: 'a_paper', name: '文献百川', desc: '收藏 10 篇文献', test: () => (S.research.papers || []).length >= 10 },
+    { id: 'a_book', name: '开卷有益', desc: '读完 3 本书', test: () => read >= 3, bonus: { coins: 20 } },
+    { id: 'a_plan', name: '目标达成', desc: '完成一个学习目标', test: () => (S.studyPlans || []).some(p => p.done) },
+    { id: 'a_sport', name: '挥洒汗水', desc: '累计 5 次训练', test: () => (S.workouts || []).length >= 5 },
+    { id: 'a_review', name: '吾日三省', desc: '累计 10 次复盘', test: () => rev >= 10 },
+    { id: 'a_insp', name: '灵感满仓', desc: '记录 30 条灵感', test: () => (S.inspiration.items || []).length >= 30 },
+    { id: 'a_focus', name: '专注当下', desc: '完成 20 个时间块', test: () => (S.timeBlocks || []).length >= 20 },
+    { id: 'a_active', name: '习惯生根', desc: '活跃满 60 天', test: () => S.activeDays.length >= 60 }
+  ];
+}
+
+/* ---------- 提醒文案（函数数组，可随机抽一句；参数化用函数） ---------- */
+const DIALOGS = {
+  checkin: [() => '今日签到 +5 薯条，又是元气满满的一天 ✦', () => '签到成功，习惯正在悄悄生长。'],
+  checkinStreak: [(n) => `已连续 ${n} 天，根扎得越来越深了。`, (n) => `连续 ${n} 天啦，离「持之以恒」成就更近一步。`],
+  levelUp: [() => '等级提升！能力值又厚了一层。', () => '升级啦，继续向上生长吧。'],
+  focusDone: [() => '专注完成，时间没有被辜负。', () => '一段心流，已收入囊中。'],
+  saved: [() => '已保存，安心收好。', () => '记下了，随时可查。'],
+  welcome: [() => '欢迎回到锦程，今天也要日拱一卒哦。', () => '嗨，我在这儿陪你一起成长。']
+};
+function pick(arr) { return Array.isArray(arr) ? arr[Math.floor(Math.random() * arr.length)] : arr; }
+function dialog(name, ...args) { const e = DIALOGS[name]; if (!e) return ''; const fn = pick(e); return typeof fn === 'function' ? fn(...args) : fn; }
+
+/* ---------- 小树苗语料 ---------- */
+const SPROUT_LINES = {
+  overview: ['这里是你的成长地图，先看一眼今天的重点吧。', '概览一下，心里就有数了。'],
+  review: ['复盘是给成长照镜子，今天照了吗？', '把今天的得失写下来，明天会更轻。'],
+  time: ['时间块一格格铺开，专注就发生了。', '规划好时间，心才不慌。'],
+  study: ['把大目标拆成小步骤，每一步都算数。', '学习是一场温柔的复利。'],
+  course: ['课表排好，节奏就稳了。作业别拖哦。', '本周课程已就位，记得同步作业到待办。'],
+  sport: ['动起来，身体会记得你的好。', '今天练点什么？力量还是有氧？'],
+  research: ['科研是慢慢长成一片森林。先看看今天推进哪一步？', '问题、文献、写作，三步一台阶。'],
+  inspiration: ['灵感像露珠，出现就要接住。', '随手记一条，未来的你会感谢现在。'],
+  reading: ['读书是和聪明人对话。今天读到哪了？', '书架上的每一本，都是一段旅程。'],
+  news: ['看看世界在发生什么，保持清醒。', '热点刷一刷，但别被它带着跑。'],
+  finance: ['钱要花得明白，攒得安心。', '记一笔，财务的迷雾就散一点。'],
+  rewards: ['努力之后，记得奖励自己。', '薯条攒够了，就兑换个小确幸吧。'],
+  settings: ['把工作台调成你最舒服的样子。', '设置里藏着属于你的锦程。'],
+  achievements: ['这些徽章，是你走过的路。', '每一枚成就，都是默默坚持的证据。']
+};
+const SPROUT_OP = {
+  add: ['记下来啦，种子又多一颗。', '已添加，期待它发芽。'],
+  done: ['完成！这一步踏得很稳。', '勾掉了，离目标近一步。'],
+  del: ['删掉了，轻装上阵。', '已移除，不再占用心力。'],
+  edit: ['改好了，更贴合现在的你。', '已更新，记下了。'],
+  save: ['妥妥保存，放心。', '存好了，随时回来找。'],
+  checkin: ['签到成功，今天也在场。', '打卡！坚持本身就是奖励。'],
+  review: ['复盘完成，思路更清了。', '写好啦，明天会更好。']
+};
+function sproutOp(op) { return pick(SPROUT_OP[op] || SPROUT_OP.save); }
+
+/* ---------- 小树苗说话 + 朗读 ---------- */
+let SPR = null;
+function sproutSay(text) {
+  SPR = SPR || $('#sprout');
+  if (!SPR || SPR.classList.contains('hidden')) return; // 仅在可见时出声
+  let b = $('#sproutBubble');
+  if (!b) { b = document.createElement('div'); b.id = 'sproutBubble'; b.className = 'sprout-bubble'; document.body.appendChild(b); }
+  b.textContent = text; b.style.display = 'block';
+  const r = SPR.getBoundingClientRect();
+  b.style.left = Math.max(8, r.left - 6) + 'px';
+  b.style.top = (r.top - b.offsetHeight - 14) + 'px';
+  clearTimeout(SPR._t);
+  SPR._t = setTimeout(() => { b.style.display = 'none'; }, 3600);
+  if (S.settings.sound && 'speechSynthesis' in window) {
+    try {
+      const u = new SpeechSynthesisUtterance(text.replace(/[✦🌟🏅✓]/g, ''));
+      u.lang = 'zh-CN'; u.rate = 1.02; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+}
+function speak(text) { sproutSay(text); }
+
+/* ---------- 小树苗拖动 ---------- */
+function attachSprout() {
+  const spr = $('#sprout');
+  const pos = (() => { try { return JSON.parse(localStorage.getItem('sprout_pos') || 'null'); } catch (e) { return null; } })();
+  if (pos) { spr.style.left = pos.x + 'px'; spr.style.top = pos.y + 'px'; spr.style.bottom = 'auto'; }
+  let sx = 0, sy = 0, moved = false, dragging = false;
+  spr.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); sx = e.clientX; sy = e.clientY; moved = false; dragging = true;
+    spr.setPointerCapture(e.pointerId);
+  });
+  spr.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!moved && Math.hypot(dx, dy) > 4) { moved = true; spr.classList.add('dragging'); spr.style.bottom = 'auto'; }
+    if (moved) {
+      const w = spr.offsetWidth, h = spr.offsetHeight;
+      let x = clamp(e.clientX - w / 2, 4, window.innerWidth - w - 4);
+      let y = clamp(e.clientY - h / 2, 4, window.innerHeight - h - 4);
+      spr.style.left = x + 'px'; spr.style.top = y + 'px';
+    }
+  });
+  const end = (e) => {
+    if (!dragging) return; dragging = false; spr.classList.remove('dragging');
+    if (moved) {
+      const r = spr.getBoundingClientRect();
+      localStorage.setItem('sprout_pos', JSON.stringify({ x: r.left, y: r.top }));
+    } else {
+      spr.classList.add('shake');
+      setTimeout(() => spr.classList.remove('shake'), 520);
+      sproutSay(pick(SPROUT_LINES[CURRENT] || SPROUT_LINES.overview));
+    }
+  };
+  spr.addEventListener('pointerup', end);
+  spr.addEventListener('pointercancel', end);
+}
+function sproutContext(view) { /* 进入模块时语境化（可选轻提示，避免打扰，仅首次） */ }
+
+/* ---------- 全局搜索索引 ---------- */
+function buildSearchIndex() {
+  const idx = [];
+  const push = (kind, title, sub, view, id) => idx.push({ kind, title: String(title || ''), sub: String(sub || ''), view, id: id || '' });
+  (S.research.papers || []).forEach(p => push('文献', p.title, (p.author || '') + ' · ' + (p.venue || ''), 'research', p.id));
+  (S.inspiration.items || []).forEach(i => push('灵感', i.text, (i.catName || '') + ' · ' + fmtDate(i.at), 'inspiration', i.id));
+  (S.todos || []).forEach(t => push('待办', t.title, (t.cat || '') + (t.due ? ' · ' + t.due : ''), 'time', t.id));
+  (S.reading.books || []).forEach(b => push('书目', b.title, (b.author || '') + ' · ' + (b.status || ''), 'reading', b.id));
+  (S.reading.notes || []).forEach(n => push('笔记', (n.text || '').slice(0, 40), (n.bookName || '') + ' · ' + (n.type || ''), 'reading', n.id));
+  (S.studyPlans || []).forEach(p => push('学习目标', p.title, p.desc || '', 'study', p.id));
+  (S.research.tasks || []).forEach(t => push('科研任务', t.title, t.note || '', 'research', t.id));
+  (S.workouts || []).forEach(w => push('训练', (w.type || '训练'), (w.date || ''), 'sport', w.id));
+  (S.finance.transactions || []).forEach(t => push('收支', t.note || t.cat, (t.kind || '') + ' ' + money(t.amount), 'finance', t.id));
+  (S.rewards.list || []).forEach(r => push('奖励', r.name, r.desc || '', 'rewards', r.id));
+  VIEWS.forEach(v => push('模块', v.name, '进入「' + v.name + '」', v.id, ''));
+  return idx;
+}
+function renderSearch(q) {
+  const pop = $('#searchPop'); if (!pop) return;
+  q = (q || '').trim().toLowerCase();
+  if (!q) { pop.classList.remove('open'); pop.innerHTML = ''; return; }
+  const res = buildSearchIndex().filter(r => (r.title + r.sub + r.kind).toLowerCase().includes(q)).slice(0, 40);
+  pop.innerHTML = res.length ? res.map(r =>
+    `<div class="sp-item" data-search-view="${r.view}" data-search-id="${r.id}">${ico(r.kind === '模块' ? 'target' : 'search', 'sp-ico')}<div><div>${esc(r.title)}</div><div class="tiny">${esc(r.sub)}</div></div><span class="sp-kind">${r.kind}</span></div>`
+  ).join('') : `<div class="empty">未找到「${esc(q)}」相关结果</div>`;
+  pop.classList.add('open');
+}
+function closeSearch() { const p = $('#searchPop'); if (p) { p.classList.remove('open'); p.innerHTML = ''; } }
+
+/* 跳转并定位到某条目 */
+function navigateTo(view, id) {
+  CURRENT = view; closeSearch(); render();
+  if (id) {
+    setTimeout(() => {
+      const node = document.querySelector('[data-item-id="' + id + '"]');
+      if (node) { node.scrollIntoView({ block: 'center' }); node.style.outline = '2px solid var(--gold)'; setTimeout(() => node.style.outline = '', 1400); }
+    }, 60);
+  }
+}
+/* ===================== 通用 UI 助手 ===================== */
+function card(title, icon, body, actHtml) {
+  return `<div class="card"><h3>${icon ? ico(icon, 'ci') : ''}${esc(title)}${actHtml ? `<span class="ch-act">${actHtml}</span>` : ''}</h3>${body}</div>`;
+}
+function btn(label, action, cls, extra) { return `<button class="btn ${cls || ''}" data-action="${action}" ${extra || ''}>${label}</button>`; }
+function bform(form, label, cls) { return `<button class="btn ${cls || ''}" data-form="${form}">${label}</button>`; }
+function chkBtn(coll, id, on) { return `<span class="chk ${on ? 'on' : ''}" data-action="done:${coll}:${id}">${on ? ico('check') : ''}</span>`; }
+function editBtn(coll, id) { return `<button class="mini" data-action="edit:${coll}:${id}" title="编辑">${ico('edit')}</button>`; }
+function delBtn(coll, id) { return `<button class="mini danger" data-action="del:${coll}:${id}" title="删除">${ico('trash')}</button>`; }
+function addBtn(label, coll, cls) { return `<button class="btn sm primary" data-action="add:${coll}">${ico('plus')}${label}</button>`; }
+function emptyHint(t) { return `<div class="empty">${esc(t)}</div>`; }
+function lvBadge() {
+  const deg = Math.round(levelProgress() * 360);
+  return `<div class="lv-badge"><div class="lv-ring" style="--p:${deg}deg"><span>${S.profile.level}</span></div>
+    <div class="xpbar"><div class="xb-track"><div class="xb-fill" style="width:${Math.round(levelProgress() * 100)}%"></div></div><div class="xb-num">LV${S.profile.level} · ${S.profile.xp}/${levelReq(S.profile.level)} XP</div></div></div>`;
+}
+
+/* ===================== 顶栏 / 侧栏 / 导航 / 主题 ===================== */
+function renderTop() {
+  $('#topbar').innerHTML =
+    btn(ico('menu'), 'toggleSidebar', 'icon-btn') +
+    `<div class="lv-badge">${lvBadge()}</div>` +
+    `<div class="tb-pill coins">${ico('finance')}${S.profile.coins}</div>` +
+    `<div class="tb-pill">${ico('fire')}${S.profile.streak} 天</div>` +
+    `<div class="tb-search">${ico('search', 'si')}<input id="searchInput" placeholder="搜索模块 / 文献 / 灵感 / 待办 / 书目…" autocomplete="off"><div class="search-pop" id="searchPop"></div></div>` +
+    `<div class="tb-actions">` +
+      btn(ico('sprout'), 'sproutToggle', 'icon-btn primary', 'title="召唤/收起小树苗"') +
+      btn(ico('check'), 'checkin', 'icon-btn', 'title="每日签到"') +
+      btn(ico(S.settings.dark ? 'sun' : 'moon'), 'toggleDark', 'icon-btn', 'title="切换深/浅色"') +
+      btn(ico('settings'), 'go:settings', 'icon-btn', 'title="设置"') +
+    `</div>`;
+}
+function renderProfile() {
+  const p = S.profile;
+  $('#profileCard').innerHTML =
+    `<div class="profile-card"><div class="pc-top">
+      <div class="avatar">${esc((p.nickname || p.name || '友').slice(0, 1))}</div>
+      <div><div class="pc-name">${esc(p.nickname || p.name)}</div><div class="pc-motto">${esc(p.motto)}</div></div>
+    </div>
+    <div class="pc-stats">
+      <div class="pc-stat"><b>${p.level}</b><span>等级</span></div>
+      <div class="pc-stat"><b>${p.coins}</b><span>薯条</span></div>
+      <div class="pc-stat"><b>${p.streak}</b><span>连签</span></div>
+      <div class="pc-stat"><b>${(S.activeDays || []).length}</b><span>活跃</span></div>
+    </div></div>`;
+}
+function renderNav() {
+  $('#nav').innerHTML = NAV_GROUPS.map(g => {
+    const items = g.items.map(id => {
+      const v = VIEWS.find(x => x.id === id);
+      const badge = (id === 'todos' ? 0 : 0);
+      return `<div class="nav-item ${CURRENT === id ? 'active' : ''}" data-action="go:${id}">${ico(v.icon, 'ni-ico')}<span>${v.name}</span>${badge ? `<span class="ni-badge">${badge}</span>` : ''}</div>`;
+    }).join('');
+    return `<div class="nav-group"><div class="ng-title">${g.title}</div>${items}</div>`;
+  }).join('');
+}
+function applyTheme() {
+  const b = document.body;
+  b.classList.toggle('dark', !!S.settings.dark);
+  b.setAttribute('data-color', S.settings.color || 'green');
+  b.setAttribute('data-density', S.settings.density === 'compact' ? 'compact' : 'comfort');
+  if (S.settings.density === 'compact') b.classList.add('compact');
+}
+function render() { applyTheme(); renderNav(); renderTop(); renderProfile(); renderDetail(); }
+
+function renderToday() {
+  const t = today();
+  const todos = (S.todos || []);
+  const addDays = function(ds, n){ const x = new Date(ds + 'T00:00:00'); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + pad2(x.getMonth() + 1) + '-' + pad2(x.getDate()); };
+  const overdue = todos.filter(function(x){ return !x.done && x.due && x.due < t; }).map(function(x){ return { x: x, od: true }; });
+  const dueToday = todos.filter(function(x){ return !x.done && x.due === t; }).map(function(x){ return { x: x, od: false }; });
+  const soon = todos.filter(function(x){ return !x.done && x.due && x.due > t && x.due <= addDays(t, 3); }).map(function(x){ return { x: x, od: false }; });
+  const items = overdue.concat(dueToday, soon);
+  const banner = S.seededDemo ? '<div class="seed-banner">当前为演示示例数据 ' + btn('清空示例', 'clearDemo', 'sm') + '</div>' : '';
+  if (!items.length && !S.seededDemo) return '';
+  const rows = items.map(function(it){
+    const x = it.x;
+    const label = it.od ? '逾期 ' + esc(x.due) : (x.due === t ? '今天截止' : '截止 ' + esc(x.due));
+    return '<div class="td-item ' + (it.od ? 'od' : '') + '">' + chkBtn('todos', x.id, x.done) + '<div class="it-title">' + esc(x.title) + '<small>' + label + (x.cat ? ' · ' + esc(x.cat) : '') + '</small></div>' + delBtn('todos', x.id) + '</div>';
+  }).join('');
+  return '<div class="today-box"><div class="today-head">' + ico('bell') + '<b>今天要处理</b>' + (items.length ? '<span class="today-count">' + items.length + ' 项</span>' : '') + '</div>' + banner + (items.length ? '<div class="today-list">' + rows + '</div>' : (S.seededDemo ? '' : '<div class="today-empty">今天没有待处理事项，太棒了！</div>')) + '</div>';
+}
+
+function renderDetail() {
+  const fn = { overview: renderOverview, review: renderReview, time: renderTime, study: renderStudy, course: renderCourse, sport: renderSport, research: renderResearch, ai: renderResearchAI, inspiration: renderInspiration, reading: renderReading, news: renderNews, finance: renderFinance, rewards: renderRewards, settings: renderSettings, achievements: renderAchievements }[CURRENT];
+  const d = $('#detail'); const td0 = (CURRENT === 'overview') ? renderToday() : ''; if (fn) d.innerHTML = td0 + fn(); else d.innerHTML = td0 + emptyHint('视图缺失');
+}
+
+/* ===================== 概览 ===================== */
+function renderOverview() {
+  const p = S.profile;
+  const td = (S.todos || []).filter(t => !t.done).slice(0, 5);
+  const doneCount = (S.todos || []).filter(t => t.done).length;
+  const allCount = (S.todos || []).length || 1;
+  const prog = Math.round(doneCount / allCount * 100);
+  const inc = (S.finance.transactions || []).filter(t => t.kind === 'income').reduce((a, t) => a + Number(t.amount || 0), 0);
+  const exp = (S.finance.transactions || []).filter(t => t.kind === 'expense').reduce((a, t) => a + Number(t.amount || 0), 0);
+  const papers = (S.research.papers || []).length;
+  const achCount = Object.keys(S.achUnlocked || {}).length;
+  const rw = (S.rewards.list || []).slice(0, 4);
+  const brief = `今天是 ${today()}，你已连续打卡 ${p.streak} 天，当前 LV${p.level}。待办还有 ${td.length} 项未完，文献 ${papers} 篇，解锁成就 ${achCount} 枚。保持节奏，日拱一卒。`;
+  return `
+  <div class="view-head"><div><h1>概览</h1><div class="sub">${esc(p.motto)}</div></div>
+    <div>${btn(ico('sprout') + ' 让小树苗读简报', 'sproutBrief', 'primary')}${btn(ico('calendar') + ' 签到打卡', 'checkin', 'gold')}</div></div>
+  <div class="grid cols-2">
+    ${card('收支速览', 'finance', `<div class="stat-grid"><div class="stat"><b class="c-inc">${money(inc)}</b><span>收入</span></div><div class="stat"><b class="c-exp">${money(exp)}</b><span>支出</span></div><div class="stat"><b>${money(inc - exp)}</b><span>结余</span></div><div class="stat"><b>${S.profile.coins}</b><span>薯条</span></div></div>`, '<span class="right">' + addBtn('记一笔', 'financeTx') + '</span>')}
+    ${card('科研速览', 'research', `<div class="stat-grid"><div class="stat"><b>${papers}</b><span>文献</span></div><div class="stat"><b>${(S.research.tasks || []).length}</b><span>任务</span></div><div class="stat"><b>${(S.research.milestones || []).filter(m => m.done).length}/${(S.research.milestones || []).length}</b><span>里程碑</span></div><div class="stat"><b>${(S.research.manuscripts || []).length}</b><span>稿件</span></div></div>`, '<span class="right">' + btn('进入科研', 'go:research', 'sm') + '</span>')}
+    ${card('奖励速览', 'rewards', rw.length ? rw.map(r => `<div class="item"><span class="tag gold">${r.cost} 薯条</span><div class="it-title">${esc(r.name)}</div>${btn('兑换', 'exchange:' + r.id, 'sm primary')}</div>`).join('') : emptyHint('暂无奖励，去「奖励」里建一个'), '<span class="right">' + btn('进入奖励', 'go:rewards', 'sm') + '</span>')}
+  </div>
+  ${card('成就墙', 'ach', `<div class="ach-wall">${ACH_DEFS().map(d => { const u = S.achUnlocked[d.id]; return `<div class="ach ${u ? '' : 'locked'}">${u ? '' : ico('lock', 'a-lock')}${ico('trophy', 'a-ico')}<div class="a-name">${d.name}</div><div class="a-desc">${d.desc}</div></div>`; }).join('')}</div>`, '<span class="right">' + btn('查看全部', 'go:achievements', 'sm') + '</span>')}
+  ${card('今日简报', 'note', `<p class="muted" id="briefText">${esc(brief)}</p>`)}`;
+}
+
+/* ===================== 复盘 ===================== */
+function renderReview() {
+  const kinds = [['daily', '日复盘', 15], ['weekly', '周复盘', 30], ['monthly', '月复盘', 50]];
+  const tab = TAB.review || 'daily';
+  const arr = S.reviews[tab] || [];
+  const meta = kinds.find(k => k[0] === tab);
+  const reviewFields = (tab === 'daily')
+    ? '<div class="field"><label>发生了什么</label><textarea id="rv_a" rows="2" placeholder="今天的三件小事..."></textarea></div>'
+      + '<div class="field"><label>思考</label><textarea id="rv_b" rows="2" placeholder="有什么想法..."></textarea></div>'
+      + '<div class="field"><label>计划</label><textarea id="rv_c" rows="2" placeholder="有什么打算..."></textarea></div>'
+    : '<div class="field"><label>' + (tab === 'weekly' ? '本周思考' : '月底大复盘') + '</label><textarea id="rv_big" rows="6" placeholder="' + (tab === 'weekly' ? '本周有什么新鲜事，有什么想法嘞 ...' : '又度过美好的一个月，那么问题来了，有啥想唠的、吐槽的，开唠...') + '"></textarea></div>';
+  return `<div class="view-head"><div><h1>复盘</h1><div class="sub">日/周/月三类复盘，分别 +15 / +30 / +50 薯条</div></div></div>
+  <div class="tabs">${kinds.map(k => `<div class="tab ${tab === k[0] ? 'active' : ''}" data-action="tab:review:${k[0]}">${k[1]}（+${k[2]}）</div>`).join('')}</div>
+  ${card(meta[1], 'review', `
+    <div class="grid2">
+      <div class="field"><label>日期</label><input id="rv_date" value="${today()}" type="date"></div>
+      <div class="field"><label>标题</label><input id="rv_title" placeholder="例如：本周复盘 · 稳步推进"></div>
+    </div>
+    ${reviewFields}
+    <div class="center">${bform('reviewInline:' + tab, '保存复盘 +' + meta[2] + ' 薯条', 'primary')}</div>
+  `)}
+  ${card('历史' + meta[1], 'clock', arr.length ? arr.slice().reverse().map(r => `<div class="item" data-item-id="${r.id}"><div class="it-title">${esc(r.title || r.date)}<small>${esc(r.date)} · ${tab === 'daily' ? esc((r.good||'').slice(0,14)) : esc((r.think||'').slice(0,14))}</small></div>${editBtn('reviews' + tab.charAt(0).toUpperCase() + tab.slice(1), r.id)}${delBtn('reviews' + tab.charAt(0).toUpperCase() + tab.slice(1), r.id)}</div>`).join('') : emptyHint('还没有' + meta[1]))}`;
+}
+
+/* ===================== 时间规划 ===================== */
+function renderTime() {
+  const presets = [15, 25, 45, 52];
+  const blocks = (S.timeBlocks || []).slice().sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+  const todos = (S.todos || []).filter(t => !t.done);
+  const todoDone = (S.todos || []).filter(t => t.done);
+  return `<div class="view-head"><div><h1>时间规划</h1><div class="sub">专注计时 · 今日时间轴 · 待办清单</div></div>
+    <div>${btn(ico('plus') + '时间块', 'addT:timeBlocks', 'primary')}</div></div>
+  <div class="grid cols-3">
+    ${card('专注计时器', 'clock', `
+      <div class="center"><div style="font-size:42px;font-weight:800;color:var(--accent)" id="focusTime">${pad2(S.settings.focusDuration)}:00</div></div>
+      <div class="row" style="justify-content:center;gap:6px;margin:8px 0">${presets.map(m => `<button class="btn sm" data-action="focusPreset:${m}">${m}'</button>`).join('')}<button class="btn sm" data-action="focusPreset:0">自定义</button></div>
+      <div class="row" style="justify-content:center;gap:8px">
+        <button class="btn primary" data-action="focusStart">开始</button>
+        <button class="btn" data-action="focusPause">暂停</button>
+        <button class="btn ghost" data-action="focusReset">重置</button>
+      </div>
+      <p class="tiny center" style="margin-top:8px">完成一轮即 +${S.settings.focusDuration >= 25 ? 15 : 10} XP · 标记活跃日</p>
+    `)}
+    ${card('今日时间轴', 'time', blocks.length ? blocks.map(b => `<div class="item" data-item-id="${b.id}">${chkBtn('timeBlocks', b.id, b.done)}<div class="it-title">${esc(b.start || '')}–${esc(b.end || '')} · ${esc(b.title)}<small>${esc(b.cat || '')}</small></div>${editBtn('timeBlocks', b.id)}${delBtn('timeBlocks', b.id)}</div>`).join('') : emptyHint('还没有时间块'))}
+    ${card('待办清单', 'target', `
+      <div style="margin-bottom:10px">${addBtn('待办', 'todos')}</div>
+      ${todos.length ? todos.map(t => `<div class="item" data-item-id="${t.id}">${chkBtn('todos', t.id, t.done)}<div class="it-title">${esc(t.title)}<small>${esc(t.cat || '')}${t.due ? ' · 截止 ' + esc(t.due) : ''}${t.remind ? ' · 提醒 ' + esc(t.remind) : ''}</small></div>${editBtn('todos', t.id)}${delBtn('todos', t.id)}</div>`).join('') : emptyHint('暂无未完成待办')}
+      ${todoDone.length ? `<div class="tiny" style="margin:8px 0 4px">已完成 ${todoDone.length} 项</div>` + todoDone.map(t => `<div class="item done" data-item-id="${t.id}">${chkBtn('todos', t.id, t.done)}<div class="it-title">${esc(t.title)}</div>${delBtn('todos', t.id)}</div>`).join('') : ''}
+    `)}
+  </div>`;
+}
+
+/* ===================== 学习规划 ===================== */
+function renderStudy() {
+  const plans = S.studyPlans || [];
+  return `<div class="view-head"><div><h1>待办规划</h1><div class="sub">目标可拆步骤，步骤全完成即判定达成</div></div>${addBtn('学习目标', 'studyPlans')}</div>
+  <div class="grid cols-2">${plans.length ? plans.map(p => {
+    const steps = p.steps || [];
+    const done = steps.filter(s => s.done).length;
+    const pct = steps.length ? Math.round(done / steps.length * 100) : 0;
+    return `<div class="card" data-item-id="${p.id}"><div class="spread"><h3 style="margin:0">${ico('study', 'ci')}${esc(p.title)} ${p.done ? '<span class="tag gold">已达成</span>' : ''}</h3><div>${editBtn('studyPlans', p.id)}${delBtn('studyPlans', p.id)}</div></div>
+      <div class="tiny">${esc(p.desc || '')}${p.due ? ' · 截止 ' + esc(p.due) : ''}</div>
+      <div style="margin:10px 0">${steps.map(s => `<div class="item" style="margin-bottom:6px">${chkBtn('studyStep', p.id + ':' + s.id, s.done)}<div class="it-title">${esc(s.text)}</div>${delBtn('studyStep', p.id + ':' + s.id)}</div>`).join('') || emptyHint('暂无步骤')}</div>
+      <button class="btn sm" data-action="addStep:${p.id}">${ico('plus')}添加步骤</button>
+      <div class="bar" style="margin-top:8px"><span style="width:${pct}%"></span></div><div class="tiny">完成 ${done}/${steps.length} · ${pct}%</div>
+    </div>`;
+  }).join('') : emptyHint('还没有学习目标，点右上角新建')}</div>`;
+}
+
+/* ===================== 课程表 ===================== */
+function renderCourse() {
+  const periods = S.courses.periods || [];
+  const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const grid = S.courses.grid || {};
+  const hw = S.courses.homework || [];
+  const hwDone = hw.filter(h => h.done).length;
+  return `<div class="view-head"><div><h1>课程表</h1><div class="sub">点格子填课；作业勾选后同步进待办清单</div></div>${btn(ico('plus') + '新增作业', 'addHw', 'primary')}</div>
+  <div class="card"><div style="overflow-x:auto"><table class="timetable"><thead><tr><th>时段</th>${days.map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>
+    ${periods.map((pr, i) => `<tr><th>${esc(pr)}</th>${days.map((d, di) => { const c = grid[di + '_' + i]; return `<td>${c ? `<div class="course" data-action="editCourse:${di}_${i}"><div class="t">${esc(c.name)}</div><div class="r">${esc(c.teacher || '')} ${esc(c.room || '')}</div></div>` : `<div class="course" data-action="editCourse:${di}_${i}" style="background:var(--line);color:var(--ink-2)">+ 课程</div>`}</td>`; }).join('')}</tr>`).join('')}
+  </tbody></table></div></div>
+  ${card('课程作业（' + hwDone + '/' + hw.length + '）', 'note', hw.length ? hw.map(h => `<div class="item" data-item-id="${h.id}">${chkBtn('coursesHomework', h.id, h.done)}<div class="it-title">${esc(h.title)}<small>${esc(h.course || '')}${h.due ? ' · ' + esc(h.due) : ''}</small></div>${editBtn('coursesHomework', h.id)}${delBtn('coursesHomework', h.id)}</div>`).join('') : emptyHint('暂无作业'), '<span class="right">' + btn(ico('plus') + '作业', 'addHw', 'sm primary') + '</span>')}`;
+}
+
+/* ===================== 运动健身 ===================== */
+function renderSport() {
+  const ws = S.workouts || [];
+  return `<div class="view-head"><div><h1>运动健身</h1><div class="sub">保存训练 +20 薯条 +15 经验 + 标记活跃日</div></div>${btn(ico('plus') + '记录训练', 'add:workouts', 'primary')}</div>
+  <div class="grid cols-2">${ws.length ? ws.slice().reverse().map(w => {
+    const rows = (w.strength || []).map(r => `<div class="tiny">${esc(r.part)} ${r.sets}×${r.reps} ${r.weight}kg</div>`).join('') || '';
+    const cardio = w.type === '有氧' ? `<div class="tiny">${w.distance}km · ${w.duration}min · 心率${w.hr}</div>` : '';
+    return `<div class="card" data-item-id="${w.id}"><div class="spread"><h3 style="margin:0">${ico('sport', 'ci')}${esc(w.type || '训练')} <span class="tag">${esc(w.date || '')}</span></h3><div>${editBtn('workouts', w.id)}${delBtn('workouts', w.id)}</div></div>${rows}${cardio}<div class="tiny">${esc(w.note || '')}</div></div>`;
+  }).join('') : emptyHint('还没有训练记录')}</div>`;
+}
+
+/* ===================== 科研进程 ===================== */
+function renderResearch() {
+  const tab = TAB.research || 'overview';
+  const tabs = [['overview', '概览'], ['plan', '计划'], ['papers', '文献库'], ['design', '研究设计'], ['materials', '资料记录'], ['writing', '写作与投稿']];
+  const r = S.research;
+  let body = '';
+  if (tab === 'overview') {
+    body = `<div class="stat-grid">
+      <div class="stat"><b>${(r.papers || []).length}</b><span>文献</span></div>
+      <div class="stat"><b>${(r.tasks || []).length}</b><span>任务</span></div>
+      <div class="stat"><b>${(r.milestones || []).filter(m => m.done).length}/${(r.milestones || []).length}</b><span>里程碑</span></div>
+      <div class="stat"><b>${(r.manuscripts || []).length}</b><span>稿件</span></div></div>
+      <div style="margin-top:12px">${addBtn('科研任务', 'researchTasks')}${addBtn('里程碑', 'researchMilestones')}</div>
+      <div style="margin-top:10px">${(r.tasks || []).slice(0, 6).map(t => `<div class="item" data-item-id="${t.id}">${chkBtn('researchTasks', t.id, t.done)}<div class="it-title">${esc(t.title)}<small>${esc(t.note || '')}</small></div>${editBtn('researchTasks', t.id)}${delBtn('researchTasks', t.id)}</div>`).join('') || emptyHint('暂无任务')}</div>`;
+  } else if (tab === 'plan') {
+    body = `<div class="field"><label>研究问题与假设</label><textarea id="rs_questions" rows="3">${esc(r.questions || '')}</textarea></div>
+      <div class="center" style="margin-bottom:12px">${btn('保存问题与假设', 'saveResearchText:questions', 'sm primary')}</div>
+      <h3>${ico('flag', 'ci')}阶段里程碑</h3>
+      <div>${(r.milestones || []).map(m => { const pct = m.pct || 0; return `<div class="item" data-item-id="${m.id}">${chkBtn('researchMilestones', m.id, m.done)}<div class="it-title">${esc(m.title)}<small>${esc(m.date || '')}</small></div><div class="bar" style="width:90px;margin:0 8px"><span style="width:${pct}%"></span></div><span class="tiny">${pct}%</span>${editBtn('researchMilestones', m.id)}${delBtn('researchMilestones', m.id)}</div>`; }).join('') || emptyHint('暂无里程碑')}</div>
+      <div style="margin:10px 0">${addBtn('里程碑', 'researchMilestones')}</div>
+      <h3>${ico('target', 'ci')}风险登记</h3>
+      <div>${(r.risks || []).map(k => `<div class="item" data-item-id="${k.id}"><span class="tag ${k.level === '高' ? '' : 'gold'}">${esc(k.level || '中')}</span><div class="it-title">${esc(k.text)}<small>${esc(k.mitigate || '')}</small></div>${editBtn('researchRisks', k.id)}${delBtn('researchRisks', k.id)}</div>`).join('') || emptyHint('暂无风险')}</div>
+      ${addBtn('风险', 'researchRisks')}`;
+  } else if (tab === 'papers') {
+    body = `<div class="row" style="margin-bottom:10px">${addBtn('文献', 'researchPapers')}${btn('导入 BibTeX/Zotero', 'importBib', 'sm')}</div>
+      <div>${(r.papers || []).map(p => `<div class="item" data-item-id="${p.id}"><div class="it-title">${esc(p.title)}<small>${esc(p.author || '')} ${p.year || ''} · ${esc(p.venue || '')} · 评分 ${p.rating || 0}/5 · 进度 ${p.progress || 0}% ${p.cited ? '· 已引用' : ''}</small></div>${editBtn('researchPapers', p.id)}${delBtn('researchPapers', p.id)}</div>`).join('') || emptyHint('文献库为空')}</div>`;
+  } else if (tab === 'design') {
+    const d = r.design || {};
+    body = `<div class="grid2">
+      <div class="field"><label>研究取向 approach</label><textarea id="ds_approach" rows="2">${esc(d.approach || '')}</textarea></div>
+      <div class="field"><label>总体 population</label><input id="ds_population" value="${esc(d.population || '')}"></div>
+      <div class="field"><label>抽样 sampling</label><input id="ds_sampling" value="${esc(d.sampling || '')}"></div>
+      <div class="field"><label>方法/工具（逗号分隔）</label><input id="ds_methods" value="${esc((d.methods || []).join(', '))}"></div>
+      <div class="field"><label>变量 concepts（逗号分隔）</label><input id="ds_vars" value="${esc((d.variables || []).join(', '))}"></div>
+      <div class="field"><label>伦理审批</label><div class="row"><span class="chk ${d.ethicsApproved ? 'on' : ''}" data-action="toggleEthics">${d.ethicsApproved ? ico('check') : ''}</span><span class="muted">已通过伦理审查</span></div></div>
+      <div class="field"><label>批号</label><input id="ds_eno" value="${esc(d.ethicsNo || '')}"></div>
+      <div class="field"><label>审批日期</label><input id="ds_edate" type="date" value="${esc(d.ethicsDate || '')}"></div>
+    </div><div class="center">${btn('保存研究设计', 'saveDesign', 'primary')}</div>`;
+  } else if (tab === 'materials') {
+    body = `<div>${addBtn('资料', 'researchMaterials')}</div><div style="margin-top:8px">${(r.materials || []).map(m => `<div class="item" data-item-id="${m.id}"><div class="it-title">${esc(m.title)}<small>${esc(m.kind || '')} ${m.ref ? '· ' + esc(m.ref) : ''}</small></div>${editBtn('researchMaterials', m.id)}${delBtn('researchMaterials', m.id)}</div>`).join('') || emptyHint('暂无资料记录')}</div>`;
+  } else if (tab === 'writing') {
+    body = `<div>${addBtn('稿件', 'researchManuscripts')}</div><div style="margin-top:8px">${(r.manuscripts || []).map(m => `<div class="item" data-item-id="${m.id}"><span class="tag accent">${esc(m.status || '草稿')}</span><div class="it-title">${esc(m.title)}<small>${esc(m.venue || '')}</small></div>${editBtn('researchManuscripts', m.id)}${delBtn('researchManuscripts', m.id)}</div>`).join('') || emptyHint('暂无稿件')}</div>`;
+  }
+  return `<div class="view-head"><div><h1>科研进程</h1><div class="sub">问题→文献→设计→资料→写作</div></div></div>
+    <div class="tabs">${tabs.map(t => `<div class="tab ${tab === t[0] ? 'active' : ''}" data-action="tab:research:${t[0]}">${t[1]}</div>`).join('')}</div>
+    ${card(tabs.find(t => t[0] === tab)[1], '', body)}`;
+}
+
+/* 科研 · AI 助手：联动大模型，支持语音输入与拍照搜索 */
+function renderResearchAI() {
+  const chat = (S.research.aiChat || []);
+  const msgs = chat.length ? chat.map(m => {
+    const src = (m.sources && m.sources.length) ? ('<div class="ai-src">' + m.sources.map(s => `<a class="ai-src-item" href="${esc(s.url || '#')}" target="_blank" rel="noopener">${ico('link')}<span class="ai-src-t">${esc(s.title || '资料')}</span>${s.url ? `<em class="ai-src-u">${esc(s.url)}</em>` : ''}</a>`).join('') + '</div>') : '';
+    const img = m.image ? `<img class="ai-photo-mini" src="${esc(m.image)}" alt="图片">` : '';
+    return `<div class="ai-msg ${m.role}"><div class="ai-role">${m.role === 'user' ? '你' : 'AI 助手'}</div><div class="ai-bubble">${img}${esc(m.content)}</div>${src}</div>`;
+  }).join('')
+    : '<div class="ai-empty">我是你的锦程 AI 助手，支持语音输入与拍照搜索。开启「联网搜索资料」后，我会真实检索网络资料并附来源链接；配置大模型接口可让我基于资料/图片做总结与引用，离线时则基于你的本地数据作答。点击下方「联网攻略」了解免费稳定的接入方式，或试试快捷指令：</div>';
+  const quick = [['帮我找资料/文献', '帮我整理现有资料与文献'], ['联网查最新研究', '帮我联网查一下最新的研究进展并给出来源'], ['识别这张图片', '请识别我上传的图片内容，并帮我查找相关资料'], ['列出今日待办', '列出我今天的待办'], ['写文献综述提纲', '帮我起草文献综述提纲'], ['生成周报草稿', '帮我写一份本周小结'], ['给点健康建议', '给我一些健康与作息建议']];
+  const cfg = S.settings.ai || {};
+  const provider = (S.settings.searchApi && /wikipedia|w\/api\.php/.test(S.settings.searchApi)) ? '自定义搜索' : '维基百科（默认）';
+  const photoBox = AI_PHOTO ? `<div class="ai-photo"><img src="${esc(AI_PHOTO)}" alt="待发送图片"><button class="chip" data-action="aiPhotoClear">移除图片 ✕</button></div>` + (cfg.api ? '' : '<p class="tiny" style="margin:4px 0 0">未配置 AI 接口，图片暂无法识别；可在「设置·联网与 AI」配置支持视觉的模型接口。</p>') : '';
+  return `<div class="ai-wrap">
+    <div class="ai-head"><div><b>AI 助手</b> · 联动大模型</div><div class="row" style="gap:6px;align-items:center">${btn(ico('globe') + '联网攻略', 'aiGuide', 'sm')}<span class="tiny">${cfg.api ? '已配置接口 · 联网作答' : '未配置接口 · 离线本地作答'}</span></div></div>
+    <label class="ai-web"><input type="checkbox" id="aiWeb" ${S.settings.aiWeb ? 'checked' : ''} data-action="aiWebToggle"> ${ico('globe')}<span>联网搜索资料</span><em class="ai-web-p">${S.settings.aiWeb ? '已开启 · ' + provider : '关闭'}</em></label>
+    <div class="ai-quick">${quick.map(q => `<button class="chip" data-action="aiQuick" data-q="${esc(q[1])}">${esc(q[0])}</button>`).join('')}</div>
+    <div class="ai-log" id="aiLog">${msgs}</div>
+    ${photoBox}
+    <div class="ai-input">
+      <textarea id="aiInput" rows="2" placeholder="语音或文字提问；也可拍照/上传图片让我识别并查资料…"></textarea>
+      <input type="file" id="aiPhotoFile" accept="image/*" capture="environment" hidden>
+      <div class="row" style="justify-content:space-between;margin-top:6px">
+        <div class="ai-tools">
+          <button class="btn sm icon-btn" data-action="aiVoice" title="语音输入">${ico('mic')}${voiceOn ? ' · 聆听中' : ''}</button>
+          <button class="btn sm icon-btn" data-action="aiPhoto" title="拍照 / 上传图片搜索">${ico('camera')}</button>
+        </div>
+        <div>
+          <button class="btn sm" data-action="aiClear">清空对话</button>
+          <button class="btn primary" data-action="aiSend">${ico('leaf')}发送</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openGuide() {
+  const html = '<div class="ai-guide"><p>想让 AI 助手真正「联网」又不折腾、不花冤枉钱？下面是最稳的免费路线（全部只需在「设置·联网与 AI」填一下）：</p>'
+    + '<p><b>1. 联网搜索资料（已免费内置，零配置）</b></p><ul>'
+    + '<li>应用默认走维基百科开放接口：无需 API Key、支持 CORS、长期稳定。勾选 AI 助手里的「联网搜索资料」即可用。</li>'
+    + '<li>想要更通用，可在设置填任意返回 <code>{items:[{title,url,snippet}]}</code> 的自定义搜索接口（自建或免费服务均可）。</li></ul>'
+    + '<p><b>2. 大模型作答（配一个 OpenAI 兼容接口，最灵活）</b></p><ul>'
+    + '<li>填 base URL + API Key + 模型名。免费/低成本稳定可选：① 各家送的免费额度/试用；② 本机跑 <b>Ollama</b>（完全免费、离线、隐私最好，装一次环境后把接口指向本机地址）——这样「拍照识别 / 资料总结」都能跑。</li></ul>'
+    + '<p><b>3. 语音输入（免费、零配置）</b></p><ul>'
+    + '<li>浏览器原生 Web Speech API，Chrome / Edge 桌面版自带中文识别，点麦克风即可，不需要任何 Key（识别走浏览器自带服务）。</li></ul>'
+    + '<p><b>4. 图片识别（需要视觉模型）</b></p><ul>'
+    + '<li>在设置填一个支持视觉的 OpenAI 兼容接口（带 vision 的模型），拍照/上传后 AI 会结合图片作答；纯离线无法识别图片。</li></ul>'
+    + '<p><b>安全提醒</b></p><ul>'
+    + '<li>API Key 只存在你自己的浏览器 localStorage，不会上传到任何服务器；导出的 JSON 备份里也可能含 Key，分享备份前请先清空设置里的 Key。</li></ul></div>';
+  openModal(html, 'AI 联网攻略（免费 · 稳定 · 方便）');
+}
+
+/* ===================== 灵感素材 ===================== */
+function renderInspiration() {
+  const cats = S.inspiration.categories || [];
+  const filter = TAB.insp || 'all';
+  const items = (S.inspiration.items || []).filter(i => filter === 'all' || i.cat === filter).slice().reverse();
+  return `<div class="view-head"><div><h1>灵感素材</h1><div class="sub">自动记录时间，支持图片/视频</div></div>
+    <div>${btn(ico('plus') + '快记', 'add:inspItems', 'primary')}${addBtn('分类', 'inspCats')}</div></div>
+  <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">
+    <span class="tag ${filter === 'all' ? 'accent' : ''}" data-action="inspFilter:all">全部</span>
+    ${cats.map(c => `<span class="tag ${filter === c.id ? 'accent' : ''}" data-action="inspFilter:${c.id}"><span class="dot" style="background:${esc(c.color)}"></span>${esc(c.name)}</span>`).join('')}
+  </div>
+  <div class="grid cols-3">${items.length ? items.map(i => {
+    const c = cats.find(x => x.id === i.cat);
+    const media = i.media ? (i.mediaType === 'video' ? `<video class="media-thumb" src="${i.media}" controls></video>` : `<img class="media-thumb" src="${i.media}" alt="">`) : '';
+    return `<div class="card" data-item-id="${i.id}"><div class="spread"><span class="tag" style="border-color:${c ? c.color : 'var(--line)'}">${esc(c ? c.name : '未分类')}</span><div>${editBtn('inspItems', i.id)}${delBtn('inspItems', i.id)}</div></div><p style="margin:8px 0">${esc(i.text)}</p>${media ? `<div>${media}</div>` : ''}<div class="tiny">${fmtDate(i.at)}</div></div>`;
+  }).join('') : emptyHint('还没有灵感，随手记一条吧')}</div>`;
+}
+
+/* ===================== 阅读记录 ===================== */
+function renderReading() {
+  const cats = S.reading.categories || [];
+  const books = S.reading.books || [];
+  const notes = S.reading.notes || [];
+  const fStatus = TAB.readStatus || 'all';
+  const fCat = TAB.readCat || 'all';
+  const shown = books.filter(b => (fStatus === 'all' || b.status === fStatus) && (fCat === 'all' || b.cat === fCat));
+  return `<div class="view-head"><div><h1>阅读记录</h1><div class="sub">书架式管理 · 好句/灵感/感悟三类笔记</div></div>
+    <div>${addBtn('书目', 'readingBooks')}${addBtn('笔记', 'readingNotes')}${addBtn('分类', 'readingCats')}</div></div>
+  <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">
+    <span class="tag ${fStatus === 'all' ? 'accent' : ''}" data-action="rFilter:status:all">全部</span>
+    <span class="tag ${fStatus === 'reading' ? 'accent' : ''}" data-action="rFilter:status:reading">在读</span>
+    <span class="tag ${fStatus === 'read' ? 'accent' : ''}" data-action="rFilter:status:read">已读</span>
+    <span class="tag ${fStatus === 'unread' ? 'accent' : ''}" data-action="rFilter:status:unread">未读</span>
+    <span style="width:10px"></span>
+    <span class="tag ${fCat === 'all' ? 'accent' : ''}" data-action="rFilter:cat:all">全分类</span>
+    ${cats.map(c => `<span class="tag ${fCat === c.id ? 'accent' : ''}" data-action="rFilter:cat:${c.id}">${esc(c.name)}</span>`).join('')}
+  </div>
+  <div class="shelf">${shown.length ? shown.map(b => { const c = cats.find(x => x.id === b.cat); const cover = b.cover ? `<img src="${b.cover}" alt="">` : esc(b.title); const stMap = { read: '已读', reading: '在读', unread: '未读' }; return `<div class="book" data-item-id="${b.id}" data-action="edit:readingBooks:${b.id}"><div class="cover">${cover}<span class="b-status">${stMap[b.status] || '未读'}</span></div><div class="b-meta"><div class="b-title">${esc(b.title)}</div><div class="tiny">${esc(b.author || '')}</div>${c ? `<span class="tag" style="border-color:${c.color};margin-top:4px">${esc(c.name)}</span>` : ''}<div class="b-prog"><span style="width:${b.progress || 0}%"></span></div></div></div>`; }).join('') : emptyHint('没有符合条件的书目')}</div>
+  ${card('读书笔记（' + notes.length + '）', 'note', notes.length ? notes.slice().reverse().map(n => `<div class="item" data-item-id="${n.id}"><span class="tag gold">${esc(n.type || '好句')}</span><div class="it-title">${esc((n.text || '').slice(0, 50))}<small>${esc(n.bookName || '')}${n.rating ? ' · ' + n.rating + '★' : ''}</small></div>${editBtn('readingNotes', n.id)}${delBtn('readingNotes', n.id)}</div>`).join('') : emptyHint('还没有笔记'), '<span class="right">' + addBtn('笔记', 'readingNotes') + '</span>')}`;
+}
+
+/* ===================== 时事热点 ===================== */
+function renderNews() {
+  const tabs = [['academic', '学术前沿'], ['tech', '科技'], ['finance', '财经'], ['society', '社会'], ['world', '国际'], ['life', '生活']];
+  const tab = S.news.tab || 'academic';
+  const saved = S.news.saved || [];
+  if (!saved.length) seedNews();
+  const list = (S.news.saved || []).filter(n => n.tab === tab);
+  const autoOn = S.news.autoCapture;
+  return `<div class="view-head"><div><h1>实时热点</h1><div class="sub">每板块 10 条 · 点击标题或「原文↗」跳转来源 · 可收藏 / 自动捕捉</div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+      <span class="tag">${S.news.updated ? '捕捉于 ' + fmtTime(S.news.updated) : '尚未捕捉'}</span>
+      <span class="chk ${autoOn ? 'on' : ''}" data-action="toggleNewsAuto" title="自动捕捉">${autoOn ? ico('check') : ''}</span><span class="muted">自动捕捉</span>
+      ${btn(ico('refresh') + '捕捉最新热点', 'newsCapture', 'primary')}
+    </div></div>
+  <div class="tabs">${tabs.map(t => `<div class="tab ${tab === t[0] ? 'active' : ''}" data-action="tab:news:${t[0]}">${t[1]}</div>`).join('')}</div>
+  <div class="grid cols-2">${list.length ? list.map(n => { const url = n.url || ''; const isReal = !!n.image; const thumb = isReal ? n.image : newsThumb(n.tab); const suit = judgeSuitability(isReal ? n.image : ''); return `<div class="card" data-item-id="${n.id}"><div class="news-media"><img class="news-thumb" src="${esc(thumb)}" alt=""><span class="news-suit tag ${suit.cls}">AI 合适度·${suit.level}</span></div><div class="spread"><a class="news-title" href="${esc(url)}" target="_blank" rel="noopener" title="查看原文">${esc(n.title)}</a><div>${n.saved ? '<span class="tag gold">已收藏</span>' : ''}${btn(n.saved ? '取消收藏' : '收藏', 'newsSave:' + n.id, 'sm')}${delBtn('newsSaved', n.id)}</div></div><div class="tiny">${esc(n.source || '')} · ${fmtDate(n.at)}${url ? ' · <a class="news-link" href="' + esc(url) + '" target="_blank" rel="noopener">原文↗</a>' : ''}</div><p class="muted" style="margin:6px 0">${esc(n.summary || '')}</p></div>`; }).join('') : emptyHint('该分类暂无内容，点「捕捉最新热点」生成')}</div>`;
+}
+/* 本地热点池：每板块 12 条，刷新时随机抽取 10 条，模拟「实时捕捉」 */
+const NEWS_POOL = {
+  academic: [
+    ['大语言模型推理能力新突破', '某团队提出链式自洽推理框架', 'Nature'],
+    ['多模态表征学习统一架构发布', '跨文本图像音频的通用编码器', 'Science'],
+    ['蛋白质结构预测精度再提升', '基于扩散模型的新方法', 'Cell'],
+    ['因果推断在社科中的应用综述', '厘清混杂与选择偏差', '社会学研究'],
+    ['可解释 AI 在医疗诊断落地', '注意力图辅助医生决策', '医学影像期刊'],
+    ['分布式训练通信开销减半', '新型梯度压缩算法', '系统会议'],
+    ['脑机接口解码语言意图', '意念转文字准确率创新高', 'Nature Neuroscience'],
+    ['气候模型分辨率迈入公里级', '极端天气预测更精准', '自然·气候'],
+    ['量子纠错阈值被突破', '逻辑比特错误率下降', 'Nature Physics'],
+    ['开放科学数据底座成型', '跨机构可复现研究平台', '科学数据'],
+    ['大模型的记忆与遗忘机制', '持续学习缓解灾难性遗忘', 'ML 顶会'],
+    ['社科大规模田野实验', '行为干预效果荟萃分析', '经济学期刊']
+  ],
+  tech: [
+    ['端侧 AI 芯片能效提升 3 倍', '新一代 NPU 量产在即', '科技日报'],
+    ['国产光刻机实现新节点', '先进封装补链强链', '财新'],
+    ['6G 标准路线图公布', '太赫兹通信进入验证', '通信世界'],
+    ['折叠屏铰链寿命破 50 万次', '新材料降低折痕', '电子工程'],
+    ['具身智能机器人进工厂', '柔性装配精度提升', '机器之心'],
+    ['开源大模型权重开放下载', '社区生态迅速壮大', 'HuggingFace'],
+    ['固态电池量产时间表提前', '能量密度达 500Wh/kg', '电池技术'],
+    ['低轨卫星互联网组网', '偏远地区宽带覆盖', '航天报道'],
+    ['隐私计算跨域流通落地', '数据可用不可见', '安全内参'],
+    ['AI 编程助手通过工程师测验', '自动修复 bug 比例上升', 'The Verge'],
+    ['边缘推理框架轻量化', '手机端跑大模型成现实', '开发者社区'],
+    ['数字孪生城市平台上线', '实时仿真辅助治理', '智慧城市']
+  ],
+  finance: [
+    ['央行维持基准利率不变', '市场流动性保持合理充裕', '财经周刊'],
+    ['人民币汇率双向波动加剧', '企业套保需求上升', '21世纪'],
+    ['新能源板块估值修复', '机构增配龙头标的', '证券时报'],
+    ['居民消费价格指数温和回升', '服务消费贡献突出', '国家统计局'],
+    ['长期资金入市渠道拓宽', '年金配置权益比例上调', '中国基金报'],
+    ['房地产融资协调机制扩围', '保交楼稳步推进', '经济观察报'],
+    ['黄金创历史新高', '避险与央行购金共振', '路透'],
+    ['数字经济占 GDP 比重提升', '数据要素市场化提速', '第一财经'],
+    ['出口结构向高附加值迁移', '电动车与设备领跑', '海关总署'],
+    ['个人养老金账户开户破亿', '税优政策持续显效', '金融时报'],
+    ['企业出海东南亚提速', '本地化运营成关键', '36氪'],
+    ['绿色金融债发行放量', '转型金融标准落地', '债券杂志']
+  ],
+  society: [
+    ['城市推行 15 分钟生活圈', '便民服务触手可及', '新华社'],
+    ['义务教育课后服务升级', '兴趣课程更加丰富', '教育部'],
+    ['老旧小区加装电梯提速', '适老化改造惠民生', '人民日报'],
+    ['县域医共体覆盖扩大', '基层首诊率提升', '健康报'],
+    ['新就业形态劳动者权益保障', '平台算法取中显温情', '工人日报'],
+    ['城市生物多样性调查发现', '口袋公园成动物驿站', '中国环境报'],
+    ['社区食堂缓解养老就餐', '助餐网络织密', '中国社会报'],
+    ['青年夜校走红', '下班后的自我充电', '共青团杂志'],
+    ['垃圾分类进入智能时代', '误投识别准确率提升', '城管报道'],
+    ['普惠托育供给增加', '缓解双职工带娃难', '新华每日电讯'],
+    ['乡村阅读空间复兴', '农家书屋数字化', '农民日报'],
+    ['志愿服务时长可兑换', '时间银行落地社区', '公益时报']
+  ],
+  world: [
+    ['多国签署清洁能源合作备忘录', '加速碳中和进程', 'Reuters'],
+    ['全球疫苗免疫联盟增资', '覆盖低收入国家', 'WHO'],
+    ['国际空间站合作延至新平台', '商业载人常态化', 'NASA'],
+    ['跨太平洋海底光缆扩容', '洲际时延再降低', '路透'],
+    ['欧盟数字市场法案落地', '守门人义务细化', '彭博'],
+    ['发展中国家债务缓释推进', '多边协调寻出路', '金融时报'],
+    ['极地科考新航次启程', '冰盖监测网络加密', 'Nature'],
+    ['国际人工智能安全对话升温', '风险分级成共识', 'AP'],
+    ['全球粮食价格指数回落', '主产国丰收在望', 'FAO'],
+    ['跨境数据流动框架磋商', '隐私与效率平衡', '经济学人'],
+    ['海外高铁项目签约', '中国标准走出去', '人民日报海外'],
+    ['国际科研合作反弹', '联合论文占比回升', '科学计量']
+  ],
+  life: [
+    ['季节性饮食指南发布', '顺应时令更健康', '健康报'],
+    ['居家健身误区盘点', '科学拉伸防损伤', '运动医学'],
+    ['睡眠卫生要点更新', '规律作息提升专注', '睡眠协会'],
+    ['极简收纳提升幸福感', '少物化生活流行', '生活方式'],
+    ['城市骑行绿道延伸', '通勤锻炼两不误', '城市周刊'],
+    ['正念冥想降低焦虑', '每日十分钟见效', '心理科学'],
+    ['家庭应急包清单热传', '防灾准备常态化', '应急科普'],
+    ['数字 detox 周末兴起', '远离屏幕找回专注', '生活家'],
+    ['宠物陪伴改善情绪', '治愈系经济升温', '消费观察'],
+    ['阳台种菜成新时尚', '都市微农业兴起', '园艺杂志'],
+    ['咖啡与心血管新研究', '适量或有益', '营养学期刊'],
+    ['亲子共读习惯养成', '早期阅读红利显著', '家庭教育']
+  ]
+};
+const NEWS_TABS = ['academic', 'tech', 'finance', 'society', 'world', 'life'];
+function newsUrl(title, source) { return 'https://www.baidu.com/s?wd=' + encodeURIComponent((title || '') + ' ' + (source || '')); }
+function newsThumb(tab) {
+  const c = { academic:'#3b6ea5', tech:'#4f8a55', finance:'#b8862f', society:'#9a5fb0', world:'#4a7d8c', life:'#c2622f' }[tab] || '#667';
+  const t = { academic:'学术前沿', tech:'科技', finance:'财经', society:'社会', world:'国际', life:'生活' }[tab] || '热点';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="130"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+c+'"/><stop offset="1" stop-color="'+c+'99"/></linearGradient></defs><rect width="320" height="130" fill="url(#g)"/><text x="16" y="78" font-family="sans-serif" font-size="26" fill="#fff" font-weight="700">'+t+'</text><text x="16" y="104" font-family="sans-serif" font-size="14" fill="#ffffffcc">实时热点 · 本地配图</text></svg>';
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+function judgeSuitability(src) {
+  if (!src) return { level: '本地', cls: 'accent' };
+  try {
+    const u = src.toLowerCase();
+    if (u.indexOf('data:') === 0) return { level: '本地', cls: 'accent' };
+    if (u.indexOf('https://') !== 0) return { level: '低', cls: 'low' };
+    const bad = ['doubleclick','adservice','googlesyndication','adnxs','pubmatic','criteo','pixel','tracking'];
+    if (bad.some(d => u.indexOf(d) >= 0)) return { level: '低', cls: 'low' };
+    const ok = ['.jpg','.jpeg','.png','.webp','.gif'];
+    if (ok.some(e => u.indexOf(e) >= 0) || u.indexOf('image') >= 0) return { level: '高', cls: 'ok' };
+    return { level: '中', cls: 'warn' };
+  } catch (e2) { return { level: '中', cls: 'warn' }; }
+}
+function newsPoolPick(tab, n) {
+  const pool = (NEWS_POOL[tab] || []).slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+  return pool.slice(0, n);
+}
+function seedNews() {
+  const keep = (S.news.saved || []).filter(n => n.saved);
+  const fresh = [];
+  NEWS_TABS.forEach(tab => newsPoolPick(tab, 10).forEach(([title, summary, source]) => fresh.push({ id: uid(), tab, title, summary, source, url: newsUrl(title, source), image: '', at: now(), saved: false })));
+  S.news.saved = keep.concat(fresh);
+  S.news.updated = Date.now();
+}
+
+/* ===================== 个人收支 ===================== */
+function renderFinance() {
+  const f = S.finance;
+  const tx = (f.transactions || []).slice().reverse();
+  const inc = tx.filter(t => t.kind === 'income').reduce((a, t) => a + Number(t.amount || 0), 0);
+  const exp = tx.filter(t => t.kind === 'expense').reduce((a, t) => a + Number(t.amount || 0), 0);
+  const creditUsed = (f.credits || []).reduce((a, c) => a + Number(c.used || 0), 0);
+  const assetTotal = Number(f.assets.online || 0) + Number(f.assets.cash || 0) + (f.assets.salary || []).reduce((a, s) => a + Number(s.amount || 0), 0);
+  return `<div class="view-head"><div><h1>个人收支</h1><div class="sub">记一笔 · 预算 · 目标 · 信用 · 资产</div></div>${addBtn('记一笔', 'financeTx')}${btn(ico('download') + '导出 CSV', 'exportCsv', 'sm')}</div>
+  <div class="grid cols-4">
+    <div class="stat"><b class="c-inc">${money(inc)}</b><span>收入</span></div>
+    <div class="stat"><b class="c-exp">${money(exp)}</b><span>支出</span></div>
+    <div class="stat"><b>${money(inc - exp)}</b><span>结余</span></div>
+    <div class="stat"><b>${money(assetTotal)}</b><span>总资产</span></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:16px">
+    ${card('收支流水', 'finance', tx.length ? `<table class="tbl"><tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th></th></tr>${tx.slice(0, 12).map(t => `<tr data-item-id="${t.id}"><td class="tiny">${fmtDate(t.date)}</td><td>${t.kind === 'income' ? '<span class="tag income">收入</span>' : '<span class="tag expense">支出</span>'}</td><td>${esc(t.cat || '')}</td><td class="${t.kind === 'income' ? 'c-inc' : 'c-exp'}">${money(t.amount)}</td><td>${editBtn('financeTx', t.id)}${delBtn('financeTx', t.id)}</td></tr>`).join('')}</table>${tx.length > 12 ? `<div class="tiny center">仅显示最近 12 条，共 ${tx.length} 条</div>` : ''}` : emptyHint('还没有流水'), '<span class="right">' + addBtn('记一笔', 'financeTx') + '</span>')}
+    ${card('月度预算 / 储蓄目标', 'target', `
+      <div style="margin-bottom:8px">${addBtn('预算', 'financeBudgets')}${addBtn('目标', 'financeGoals')}</div>
+      ${(f.budgets || []).map(b => { const pct = b.limit ? Math.round(Number(b.spent || 0) / Number(b.limit) * 100) : 0; return `<div class="item" data-item-id="${b.id}"><div class="it-title">${esc(b.name || '预算')}<small>已用 ${money(b.spent || 0)} / 限额 ${money(b.limit)}</small></div><div class="bar" style="width:80px"><span style="width:${pct}%"></span></div>${editBtn('financeBudgets', b.id)}${delBtn('financeBudgets', b.id)}</div>`; }).join('') || ''}
+      ${(f.goals || []).map(g => { const need = Math.max(0, Number(g.target || 0) - Number(g.saved || 0)); const pct = g.target ? Math.round(Number(g.saved || 0) / Number(g.target) * 100) : 0; return `<div class="item" data-item-id="${g.id}"><div class="it-title">${esc(g.name || '目标')}<small>已攒 ${money(g.saved || 0)} / 目标 ${money(g.target)} · 待筹 ${money(need)}</small></div><div class="bar gold" style="width:80px"><span style="width:${pct}%"></span></div>${editBtn('financeGoals', g.id)}${delBtn('financeGoals', g.id)}</div>`; }).join('') || emptyHint('暂无预算/目标')}
+    `)}
+    ${card('信用消费账期', 'finance', `<div style="margin-bottom:8px">${addBtn('信用账户', 'financeCredits')}</div>${(f.credits || []).map(c => `<div class="item" data-item-id="${c.id}"><div class="it-title">${esc(c.platform || '信用')}<small>额度 ${money(c.limit)} · 已用 ${money(c.used || 0)} · 还款日 ${esc(c.due || '')} · 最低 ${money(c.min || 0)}</small></div>${editBtn('financeCredits', c.id)}${delBtn('financeCredits', c.id)}</div>`).join('') || emptyHint('暂无信用账户')}</div>`)}
+    ${card('现有资产', 'finance', `<div class="grid2"><div class="field"><label>线上资产</label><input id="as_online" type="number" value="${f.assets.online || 0}"></div><div class="field"><label>现金</label><input id="as_cash" type="number" value="${f.assets.cash || 0}"></div></div><div style="margin-bottom:8px">${addBtn('工资账户', 'financeSalary')}</div>${(f.assets.salary || []).map(s => `<div class="item" data-item-id="${s.id}"><div class="it-title">${esc(s.name || '工资')}<small>${money(s.amount)} · ${esc(s.cycle || '')}</small></div>${delBtn('financeSalary', s.id)}</div>`).join('') || emptyHint('暂无工资账户')}<div class="center" style="margin-top:8px">${btn('保存资产', 'saveAssets', 'primary')}</div></div>`)}
+  </div>`;
+}
+
+/* ===================== 奖励 ===================== */
+function renderRewards() {
+  const rw = S.rewards.list || [];
+  const pool = S.rewardPool || { tickets: 3, history: [] };
+  const canEdit = S.rewards.edits < 3;
+  return `<div class="view-head"><div><h1>奖励</h1><div class="sub">每月限编辑 3 次 · 薯条兑换 · 每月 3 张抽奖券</div></div>
+    <div>${btn(ico('star') + ' 抽奖（剩' + pool.tickets + '）', 'lottery', 'gold')}</div></div>
+  <div class="grid cols-2">
+    ${card('奖励清单', 'rewards', `<p class="tiny">${canEdit ? '本月还可编辑 ' + (3 - S.rewards.edits) + ' 次' : '本月编辑次数已用完，下月重置'}</p>` + (rw.length ? rw.map(r => `<div class="item" data-item-id="${r.id}"><span class="tag gold">${r.cost} 薯条</span><div class="it-title">${esc(r.name)}<small>${esc(r.desc || '')}</small></div>${btn('兑换', 'exchange:' + r.id, 'sm primary')}${canEdit ? editBtn('rewardsList', r.id) : ''}${canEdit ? delBtn('rewardsList', r.id) : ''}</div>`).join('') : emptyHint('暂无奖励')) + (canEdit ? `<div style="margin-top:8px">${addBtn('新建奖励', 'rewardsList')}</div>` : ''), '<span class="right">' + (canEdit ? addBtn('新建', 'rewardsList') : '') + '</span>')}
+    ${card('兑换历史', 'clock', (S.rewards.history || []).length ? S.rewards.history.slice().reverse().map(h => `<div class="item"><span class="tag gold">-${h.cost}</span><div class="it-title">${esc(h.name)}<small>${fmtDate(h.at)}</small></div></div>`).join('') : emptyHint('还没有兑换记录'))}
+  </div>`;
+}
+
+/* ===================== 设置 ===================== */
+function renderSettings() {
+  const s = S.settings, p = S.profile;
+  return `<div class="view-head"><div><h1>设置</h1><div class="sub">个性化你的锦程工作台</div></div></div>
+  <div class="grid cols-2">
+    ${card('个人资料', 'profile', `
+      <div class="grid2"><div class="field"><label>昵称</label><input id="st_nick" value="${esc(p.nickname)}"></div><div class="field"><label>姓名</label><input id="st_name" value="${esc(p.name)}"></div></div>
+      <div class="grid2"><div class="field"><label>性别</label><select id="st_gender">${['保密', '男', '女'].map(g => `<option ${p.gender === g ? 'selected' : ''}>${g}</option>`).join('')}</select></div><div class="field"><label>生日</label><input id="st_birth" type="date" value="${esc(p.birthday)}"></div></div>
+      <div class="field"><label>座右铭</label><input id="st_motto" value="${esc(p.motto)}"></div>
+      <div class="center">${btn('保存资料', 'saveProfile', 'primary')}</div>`, '<span class="right">' + btn(ico('edit') + '编辑', 'saveProfile', 'sm primary') + '</span>')}
+    ${card('外观', 'settings', `
+      <div class="field"><label>深浅色</label><div class="row"><button class="btn ${!s.dark ? 'primary' : ''}" data-action="setDark:0">浅色</button><button class="btn ${s.dark ? 'primary' : ''}" data-action="setDark:1">深色</button></div></div>
+      <div class="field"><label>主题色</label><div class="row">${[['green', '墨绿'], ['dai', '黛蓝'], ['zhe', '赭石'], ['zi', '紫棠']].map(c => `<button class="btn ${s.color === c[0] ? 'primary' : ''}" data-action="setColor:${c[0]}">${c[1]}</button>`).join('')}</div></div>
+      <div class="field"><label>密度</label><div class="row"><button class="btn ${s.density !== 'compact' ? 'primary' : ''}" data-action="setDensity:comfort">宽松</button><button class="btn ${s.density === 'compact' ? 'primary' : ''}" data-action="setDensity:compact">紧凑</button></div></div>
+    `)}
+    ${card('通知与专注', 'bell', `
+      <div class="field"><label>系统通知</label><div class="row"><span class="chk ${s.notifications ? 'on' : ''}" data-action="toggleNotif">${s.notifications ? ico('check') : ''}</span><span class="muted">开启后关键操作弹提示</span>${btn('测试', 'testNotif', 'sm')}</div></div>
+      <div class="grid2"><div class="field"><label>久坐阈值(分)</label><input id="st_sit" type="number" value="${s.sitThreshold || 50}"></div><div class="field"><label>默认专注(分)</label><input id="st_focus" type="number" value="${s.focusDuration || 25}"></div></div>
+      <div class="field"><label>提醒提前(分)</label><input id="st_lead" type="number" value="${s.remindLead || 10}"></div>
+      <div class="row"><span class="chk ${s.sound ? 'on' : ''}" data-action="toggleSound">${s.sound ? ico('check') : ''}</span><span class="muted">小树苗语音朗读</span></div>
+    `)}
+    ${card('GitHub 同步（跨设备自动同步）', 'cloud', `
+      <p class="tiny" style="margin:0 0 8px">把备份存到你自己的 GitHub <b>私有仓库</b>，手机 / 平板点一下即可互相同步数据。GitHub API 支持浏览器跨域，纯前端直连，无需服务器。<b>建议用独立私有仓库专存备份</b>，不要和托管页面的公开仓库混用，避免数据被公开访问。</p>
+      <div class="field"><label>GitHub 用户名</label><input id="st_ghuser" value="${esc((S.settings.gh||{}).user || '')}" placeholder="你的 GitHub 登录名"></div>
+      <div class="field"><label>备份仓库名（建议私有）</label><input id="st_ghrepo" value="${esc((S.settings.gh||{}).repo || '')}" placeholder="例如 jincheng-sync"></div>
+      <div class="field"><label>个人访问令牌 PAT（仅 repo 权限，只存你本地）</label><input id="st_ghtoken" type="password" value="${esc((S.settings.gh||{}).token || '')}" placeholder="github_pat_xxx"></div>
+      <div class="field"><label>备份文件路径（仓库内相对路径）</label><input id="st_ghpath" value="${esc((S.settings.gh||{}).path || 'backup/jincheng-backup.json')}"></div>
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn primary" data-action="ghPush">${ico('upload')}上传备份（推到 GitHub）</button>
+        <button class="btn" data-action="ghPull">${ico('download')}拉取备份（从 GitHub 恢复）</button>
+        <button class="btn" data-action="saveNet">保存 GitHub 配置</button>
+      </div>
+      <ol class="tiny" style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>GitHub 新建一个<b>私有</b>仓库（如 jincheng-sync）；</li>
+        <li>Settings → Developer settings → Personal access tokens → 生成 <b>仅勾 repo</b> 权限的 PAT；</li>
+        <li>上方填好用户名 / 仓库 / PAT / 路径，点「保存 GitHub 配置」；</li>
+        <li>手机和平板都用同一套配置，分别点「上传 / 拉取」即可同步。</li>
+      </ol>
+      <p class="tiny" style="margin:8px 0 0">提示：PAT 只保存在你本机浏览器，不会写入页面或上传任何服务器。若担心泄露，可随时在 GitHub 撤销该 PAT。</p>
+    `, '<span class="right"><span class="tag gold">自动</span></span>')}
+    ${card('数据管理', 'download', `
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn" data-action="exportJson">${ico('download')}导出 JSON</button>
+        <button class="btn" data-action="importJson">${ico('upload')}导入 JSON</button>
+        <button class="btn" data-action="clearData">${ico('trash')}清空数据</button>
+        <button class="btn danger" data-action="resetGrowth">${ico('refresh')}清零成长值</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    `)}
+    ${card('联网与 AI（可选）', 'cloud', `
+      <div class="field"><label>资料搜索接口（留空=默认维基百科，无需 Key、支持 CORS）</label><input id="st_searchapi" value="${esc(S.settings.searchApi || '')}" placeholder="https://zh.wikipedia.org/w/api.php 或 你的搜索服务"></div>
+      <div class="field"><label>时事热点抓取接口（POST，返回 [{tab,title,summary,source}]）</label><input id="st_newsapi" value="${esc(S.settings.newsApi || '')}" placeholder="https://your-host/api/news"></div>
+      <div class="field"><label>AI 大模型接口（OpenAI 兼容 /chat/completions）</label><input id="st_aiapi" value="${esc((S.settings.ai || {}).api || '')}" placeholder="https://api.openai.com/v1/chat/completions"></div>
+      <div class="grid2"><div class="field"><label>API Key</label><input id="st_aikey" value="${esc((S.settings.ai || {}).key || '')}" placeholder="sk-..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="${esc((S.settings.ai || {}).model || '')}" placeholder="gpt-4o-mini"></div></div>
+      <div class="row"><span class="chk ${S.news.autoCapture ? 'on' : ''}" data-action="toggleNewsAuto">${S.news.autoCapture ? ico('check') : ''}</span><span class="muted">自动捕捉热点（每 5 分钟）</span></div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" data-action="saveNet">保存配置</button><button class="btn" data-action="aiTest">测试 AI</button>${btn('前往 AI 助手', 'go:research', 'sm')}</div>
+      <p class="tiny">留空则：热点使用本地热点池模拟实时捕捉；AI 助手基于本地数据作答。配置真实接口后，「刷新 / 捕捉」与 AI 问答将联网获取。</p>
+    `, '<span class="right"><span class="tag ' + (S.settings.newsApi || (S.settings.ai || {}).api ? 'gold' : '') + '">' + (S.settings.newsApi || (S.settings.ai || {}).api ? '已配置' : '未配置') + '</span></span>')}
+  </div>`;
+}
+
+/* ===================== 成就 ===================== */
+function renderAchievements() {
+  const defs = ACH_DEFS();
+  const memorial = S.achievements || [];
+  return `<div class="view-head"><div><h1>成就墙</h1><div class="sub">基于行为计数自动解锁，也可自建纪念成就</div></div>${addBtn('纪念成就', 'achievements')}</div>
+  <h3 style="margin:4px 0 10px">行为成就（${Object.keys(S.achUnlocked).length}/${defs.length}）</h3>
+  <div class="ach-wall">${defs.map(d => { const u = S.achUnlocked[d.id]; return `<div class="ach ${u ? '' : 'locked'}">${u ? '' : ico('lock', 'a-lock')}${ico('trophy', 'a-ico')}<div class="a-name">${d.name}</div><div class="a-desc">${d.desc}</div>${u ? `<div class="tiny" style="margin-top:4px">${fmtDate(u.at)}</div>` : ''}</div>`; }).join('')}</div>
+  <h3 style="margin:18px 0 10px">纪念成就（${memorial.length}）</h3>
+  <div class="ach-wall">${memorial.length ? memorial.map(m => `<div class="ach" data-item-id="${m.id}">${ico('heart', 'a-ico')}<div class="a-name">${esc(m.name)}</div><div class="a-desc">${fmtDate(m.date)} · 开心值 ${m.joy}/5${m.reward ? ' · ' + esc(m.reward) : ''}</div><div style="margin-top:6px">${delBtn('achievements', m.id)}</div></div>`).join('') : emptyHint('还没有纪念成就')}</div>`;
+}
+/* ===================== 通用集合机件 ===================== */
+function collArr(coll) {
+  switch (coll) {
+    case 'timeBlocks': return S.timeBlocks;
+    case 'todos': return S.todos;
+    case 'studyPlans': return S.studyPlans;
+    case 'coursesHomework': return S.courses.homework;
+    case 'workouts': return S.workouts;
+    case 'researchPapers': return S.research.papers;
+    case 'researchIdeas': return S.research.ideas;
+    case 'researchTasks': return S.research.tasks;
+    case 'researchMilestones': return S.research.milestones;
+    case 'researchRisks': return S.research.risks;
+    case 'researchMaterials': return S.research.materials;
+    case 'researchManuscripts': return S.research.manuscripts;
+    case 'inspItems': return S.inspiration.items;
+    case 'inspCats': return S.inspiration.categories;
+    case 'readingBooks': return S.reading.books;
+    case 'readingNotes': return S.reading.notes;
+    case 'readingCats': return S.reading.categories;
+    case 'financeTx': return S.finance.transactions;
+    case 'financeBudgets': return S.finance.budgets;
+    case 'financeGoals': return S.finance.goals;
+    case 'financeBig': return S.finance.big;
+    case 'financeCredits': return S.finance.credits;
+    case 'financeSalary': return S.finance.assets.salary;
+    case 'rewardsList': return S.rewards.list;
+    case 'rewardsHistory': return S.rewards.history;
+    case 'rewardPoolHistory': return S.rewardPool.history;
+    case 'newsSaved': return S.news.saved;
+    case 'reviewsDaily': return S.reviews.daily;
+    case 'reviewsWeekly': return S.reviews.weekly;
+    case 'reviewsMonthly': return S.reviews.monthly;
+    case 'achievements': return S.achievements;
+    case 'activeDays': return S.activeDays;
+    case 'log': return S.log;
+    default: return null;
+  }
+}
+function upsert(coll, id, obj) {
+  const arr = collArr(coll); if (!arr) return;
+  if (id) { const i = arr.findIndex(x => x.id === id); if (i >= 0) arr[i] = Object.assign({}, arr[i], obj); else arr.push(obj); }
+  else arr.push(obj);
+  save(); render(); checkAch();
+}
+function delColl(coll, id) {
+  const arr = collArr(coll); if (!arr) return;
+  if (coll === 'readingCats') {
+    if (id === 'r_def') { toast('默认分类不可删除', 'err'); return; }
+    (S.reading.books || []).forEach(b => { if (b.cat === id) b.cat = 'r_def'; });
+    (S.reading.notes || []).forEach(n => { if (n.cat === id) n.cat = 'r_def'; });
+  }
+  if (coll === 'inspCats') {
+    if (id === 'c_def') { toast('默认分类不可删除', 'err'); return; }
+    (S.inspiration.items || []).forEach(i => { if (i.cat === id) i.cat = 'c_def'; });
+  }
+  const i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1);
+  save(); render(); toast('已删除', 'ok'); sproutSay(sproutOp('del'));
+}
+function moveItem(arr, id, dir) {
+  const i = arr.findIndex(x => x.id === id); if (i < 0) return;
+  const j = i + dir; if (j < 0 || j >= arr.length) return;
+  const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+}
+function toggleDone(coll, id) {
+  if (coll === 'studyStep') {
+    const [pid, sid] = id.split(':');
+    const plan = (S.studyPlans || []).find(p => p.id === pid);
+    if (plan && plan.steps) { const st = plan.steps.find(s => s.id === sid); if (st) { st.done = !st.done; plan.done = plan.steps.length > 0 && plan.steps.every(s => s.done); save(); render(); checkAch(); } }
+    return;
+  }
+  const arr = collArr(coll); if (!arr) return;
+  const it = arr.find(x => x.id === id); if (!it) return;
+  it.done = !it.done;
+  if (coll === 'coursesHomework' && it.done) {
+    const exist = (S.todos || []).find(t => t.srcHw === id);
+    if (!exist) S.todos.push({ id: uid(), title: it.title, cat: '课程作业', due: it.due || '', remind: '', done: true, srcHw: id });
+  }
+  sproutSay(sproutOp('done')); save(); render(); checkAch();
+}
+
+/* ===================== 弹窗 ===================== */
+function openModal(html, title, wide) {
+  const box = $('#modalBox');
+  box.className = wide ? 'wide' : '';
+  box.innerHTML = `<div class="modal-head"><h2>${esc(title)}</h2><button class="modal-close" data-action="closeModal" title="关闭">${ico('x')}</button></div>${html}`;
+  $('#modalRoot').classList.add('open');
+}
+function closeModal() { $('#modalRoot').classList.remove('open'); $('#modalBox').innerHTML = ''; }
+
+/* 表单字段助手 */
+function fText(id, label, val, type) { return `<div class="field"><label>${label}</label><input id="${id}" value="${esc(val == null ? '' : val)}" ${type ? 'type="' + type + '"' : ''}></div>`; }
+function fArea(id, label, val, rows) { return `<div class="field"><label>${label}</label><textarea id="${id}" rows="${rows || 2}">${esc(val == null ? '' : val)}</textarea></div>`; }
+function fSel(id, label, val, opts) { return `<div class="field"><label>${label}</label><select id="${id}">${opts.map(o => `<option ${String(o) === String(val) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></div>`; }
+function fNum(id, label, val) { return fText(id, label, val, 'number'); }
+function fChk(id, label, checked) { return `<div class="field"><div class="row"><span class="chk ${checked ? 'on' : ''}" id="${id}" data-toggle="${id}">${checked ? ico('check') : ''}</span><span class="muted">${label}</span></div></div>`; }
+function fId(item) { return `<input type="hidden" id="f_id" value="${item && item.id ? esc(item.id) : ''}">`; }
+function foot(form) { return `<div class="modal-foot"><button class="btn ghost" data-action="closeModal" type="button">取消</button><button class="btn primary" data-form="${form}" type="button">保存</button></div>`; }
+
+/* ===================== 表单构建（openEdit 分发） ===================== */
+function openAdd(coll) { showForm(coll, null); }
+function openEdit(coll, id) {
+  const arr = collArr(coll); const item = arr ? arr.find(x => x.id === id) : null;
+  showForm(coll, item || null);
+}
+function showForm(coll, item) {
+  const r = buildForm(coll, item);
+  if (!r) { toast('该类型暂不支持编辑', 'err'); return; }
+  openModal(r.html, r.title, r.wide);
+  if (coll === 'inspItems') tryAutoLoc();
+}
+function buildForm(coll, item) {
+  const id = item && item.id ? item.id : '';
+  switch (coll) {
+    case 'timeBlocks': return { title: id ? '编辑时间块' : '新增时间块', html:
+      fText('f_start', '开始时间', item && item.start, 'time') + fText('f_end', '结束时间', item && item.end, 'time') +
+      fText('f_title', '内容', item && item.title) + fText('f_cat', '分类', item && item.cat) + fId(item) + foot('timeBlocks') };
+    case 'todos': return { title: id ? '编辑待办' : '新增待办', html:
+      fText('f_title', '标题', item && item.title) + fText('f_cat', '分类', item && item.cat) +
+      fText('f_due', '截止日期', item && item.due, 'date') + fText('f_remind', '提醒时间', item && item.remind, 'time') + fId(item) + foot('todos') };
+    case 'studyPlans': {
+      const steps = item ? (item.steps || []) : [];
+      const rows = steps.map(s => `<div class="step-row"><input class="step-text" data-sid="${s.id}" data-done="${s.done ? 1 : 0}" value="${esc(s.text)}"><button class="mini danger" data-action="delStepRow" type="button">${ico('x')}</button></div>`).join('');
+      return { title: id ? '编辑学习目标' : '新建学习目标', html:
+        fText('f_title', '标题', item && item.title) + fArea('f_desc', '描述', item && item.desc, 2) +
+        fText('f_due', '截止日期', item && item.due, 'date') +
+        `<div class="field"><label>步骤</label><div id="stepRows">${rows}</div><button class="btn sm" data-action="addStepRow" type="button">${ico('plus')}添加步骤</button></div>` +
+        fId(item) + foot('studyPlans') };
+    }
+    case 'workouts': {
+      const str = (item && item.strength || []).map(r => `<div class="str-row"><input class="s-part" value="${esc(r.part)}" placeholder="部位"><input class="s-sets" value="${esc(r.sets)}" placeholder="组"><input class="s-reps" value="${esc(r.reps)}" placeholder="次"><input class="s-w" value="${esc(r.weight)}" placeholder="kg"><button class="mini danger" data-action="delStrRow" type="button">${ico('x')}</button></div>`).join('');
+      return { title: id ? '编辑训练' : '记录训练', html:
+        fSel('f_type', '类型', item && item.type, ['力量', '有氧']) + fText('f_date', '日期', item && item.date || today(), 'date') +
+        `<div class="field"><label>力量训练（多行）</label><div id="strRows">${str}</div><button class="btn sm" data-action="addStrRow" type="button">${ico('plus')}增加一行</button></div>` +
+        `<div class="grid3"><div class="field"><label>距离km</label><input id="f_dist" type="number" value="${item && item.distance || ''}"></div><div class="field"><label>时长min</label><input id="f_dur" type="number" value="${item && item.duration || ''}"></div><div class="field"><label>心率</label><input id="f_hr" type="number" value="${item && item.hr || ''}"></div></div>` +
+        fArea('f_note', '备注', item && item.note, 2) + fId(item) + foot('workouts') };
+    }
+    /* 文献：单一分支，包含 venue/评分/进度/已引用/附件/笔记 全部字段，避免互相遮蔽 */
+    case 'researchPapers': return { title: id ? '编辑文献' : '新增文献', wide: true, html:
+      fText('f_title', '标题', item && item.title) + `<div class="grid2">` + fText('f_author', '作者', item && item.author) + fNum('f_year', '年份', item && item.year) + `</div>` +
+      fSel('f_status', '状态', item && item.status, ['想读', '在读', '已读', '精读']) +
+      `<div class="grid2">` + fText('f_venue', '出处 venue', item && item.venue) + fNum('f_rating', '评分(0-5)', item && item.rating) + `</div>` +
+      fText('f_tags', '标签(逗号分隔)', (item && item.tags || []).join(', ')) +
+      `<div class="grid2">` + fNum('f_progress', '阅读进度%', item && item.progress) + fChk('f_cited', '已引用', item && item.cited) + `</div>` +
+      fText('f_attach', '附件(URL 或路径)', item && item.attachment) +
+      fArea('f_notes', '笔记', item && item.notes, 3) + fId(item) + foot('researchPapers') };
+    case 'researchTasks': return { title: id ? '编辑任务' : '新增科研任务', html:
+      fText('f_title', '标题', item && item.title) + fArea('f_note', '说明', item && item.note, 2) + fChk('f_done', '已完成', item && item.done) + fId(item) + foot('researchTasks') };
+    case 'researchMilestones': return { title: id ? '编辑里程碑' : '新增里程碑', html:
+      fText('f_title', '标题', item && item.title) + fText('f_date', '计划日期', item && item.date, 'date') + fNum('f_pct', '完成度%', item && item.pct) + fChk('f_done', '已完成', item && item.done) + fId(item) + foot('researchMilestones') };
+    case 'researchRisks': return { title: id ? '编辑风险' : '新增风险', html:
+      fArea('f_text', '风险描述', item && item.text, 2) + fSel('f_level', '等级', item && item.level, ['高', '中', '低']) + fArea('f_mit', '缓解措施', item && item.mitigate, 2) + fId(item) + foot('researchRisks') };
+    case 'researchMaterials': return { title: id ? '编辑资料' : '新增资料', html:
+      fText('f_title', '标题', item && item.title) + fSel('f_kind', '类型', item && item.kind, ['访谈', '田野', '观察', '编码表', '数据集', '链接']) + fText('f_ref', '关联文件/链接', item && item.ref) + fArea('f_note', '说明', item && item.note, 2) + fId(item) + foot('researchMaterials') };
+    case 'researchManuscripts': return { title: id ? '编辑稿件' : '新增稿件', html:
+      fText('f_title', '标题', item && item.title) + fSel('f_status', '状态', item && item.status, ['草稿', '投稿中', '审稿中', '修改中', '录用', '发表']) + fText('f_venue', '投稿期刊', item && item.venue) + fArea('f_notes', '评审意见与修改清单', item && item.notes, 3) + fId(item) + foot('researchManuscripts') };
+    case 'inspItems': return { title: id ? '编辑灵感' : '记录灵感', html:
+      fArea('f_text', '内容', item && item.text, 3) + fSel('f_cat', '分类', item && item.cat, (S.inspiration.categories || []).map(c => c.id)) +
+      `<div class="field"><label>图片 / 视频</label><input type="file" id="f_media" accept="image/*,video/*"></div>` + fId(item) + foot('inspItems') };
+    case 'inspCats': return { title: id ? '编辑分类' : '新建分类', html:
+      fText('f_name', '名称', item && item.name) + `<div class="field"><label>色标</label><input id="f_color" type="color" value="${item && item.color || '#4f8a55'}"></div>` + fId(item) + foot('inspCats') };
+    case 'readingBooks': return { title: id ? '编辑书目' : '添加书目', html:
+      fText('f_title', '书名', item && item.title) + fText('f_author', '作者', item && item.author) +
+      fSel('f_status', '状态', item && item.status, ['reading', 'read', 'unread']) +
+      fSel('f_cat', '分类', item && item.cat, (S.reading.categories || []).map(c => c.id)) + fNum('f_progress', '阅读进度%', item && item.progress) +
+      `<div class="field"><label>封面图</label><input type="file" id="f_cover" accept="image/*"></div>` + fId(item) + foot('readingBooks') };
+    case 'readingNotes': return { title: id ? '编辑笔记' : '写读书笔记', html:
+      fSel('f_type', '类型', item && item.type, ['好句', '灵感', '感悟']) +
+      fSel('f_book', '关联书目', item && item.bookId, (S.reading.books || []).map(b => b.id)) +
+      fArea('f_text', '内容', item && item.text, 3) + fNum('f_rating', '打分(0-5，感悟用)', item && item.rating) +
+      `<div class="field"><label>图片 / 视频</label><input type="file" id="f_media" accept="image/*,video/*"></div>` + fId(item) + foot('readingNotes') };
+    case 'readingCats': return { title: id ? '编辑分类' : '新建分类', html:
+      fText('f_name', '名称', item && item.name) + `<div class="field"><label>色标</label><input id="f_color" type="color" value="${item && item.color || '#8a8a8a'}"></div>` + fId(item) + foot('readingCats') };
+    case 'financeTx': return { title: id ? '编辑流水' : '记一笔', html:
+      fSel('f_kind', '类型', item && item.kind, ['expense', 'income']) +
+      `<div class="grid2">` + fNum('f_amount', '金额', item && item.amount) + fText('f_cat', '分类', item && item.cat) + `</div>` +
+      fText('f_account', '账户/信用平台', item && item.account) + fText('f_date', '日期', item && item.date || today(), 'date') + fText('f_note', '备注', item && item.note) + fId(item) + foot('financeTx') };
+    case 'financeBudgets': return { title: id ? '编辑预算' : '新增预算', html:
+      fText('f_name', '名称', item && item.name) + `<div class="grid2">` + fNum('f_limit', '限额', item && item.limit) + fNum('f_spent', '已用', item && item.spent) + `</div>` + fId(item) + foot('financeBudgets') };
+    case 'financeGoals': return { title: id ? '编辑目标' : '新增储蓄目标', html:
+      fText('f_name', '名称', item && item.name) + `<div class="grid2">` + fNum('f_target', '目标金额', item && item.target) + fNum('f_saved', '已攒', item && item.saved) + `</div>` + fId(item) + foot('financeGoals') };
+    case 'financeCredits': return { title: id ? '编辑信用账户' : '新增信用账户', html:
+      fText('f_platform', '平台', item && item.platform) + `<div class="grid3">` + fNum('f_limit', '额度', item && item.limit) + fNum('f_used', '已用', item && item.used) + fNum('f_min', '最低还款', item && item.min) + `</div>` + fText('f_due', '还款日', item && item.due) + fId(item) + foot('financeCredits') };
+    case 'financeSalary': return { title: id ? '编辑工资账户' : '新增工资账户', html:
+      fText('f_name', '名称', item && item.name) + fNum('f_amount', '金额', item && item.amount) + fText('f_cycle', '周期', item && item.cycle) + fId(item) + foot('financeSalary') };
+    case 'rewardsList': return { title: id ? '编辑奖励' : '新建奖励', html:
+      fText('f_name', '名称', item && item.name) + fNum('f_cost', '薯条成本', item && item.cost) + fText('f_desc', '描述', item && item.desc) + fId(item) + foot('rewardsList') };
+    case 'achievements': return { title: id ? '编辑纪念成就' : '新建纪念成就', html:
+      fText('f_name', '名称', item && item.name) + fText('f_date', '日期', item && item.date || today(), 'date') + fNum('f_joy', '开心值(1-5)', item && item.joy) + fText('f_reward', '奖励', item && item.reward) + fId(item) + foot('achievements') };
+    case 'coursesHomework': return { title: id ? '编辑作业' : '新增作业', html:
+      fText('f_title', '作业标题', item && item.title) + fText('f_course', '所属课程', item && item.course) + fText('f_due', '截止日期', item && item.due, 'date') + fId(item) + foot('hw') };
+    case 'reviewsDaily': case 'reviewsWeekly': case 'reviewsMonthly': {
+      const tab = coll.replace('reviews', '').toLowerCase();
+      const rf = (tab === 'daily')
+        ? fArea('f_a', '发生了什么', item && item.good, 2) + fArea('f_b', '思考', item && item.bad, 2) + fArea('f_c', '计划', item && item.next, 2)
+        : fArea('f_big', (tab === 'weekly' ? '本周思考' : '月底大复盘'), item && item.think, 6);
+      return { title: (tab === 'daily' ? '日' : tab === 'weekly' ? '周' : '月') + '复盘', html:
+        fText('f_date', '日期', item && item.date || today(), 'date') + fText('f_title', '标题', item && item.title) +
+        rf + fId(item) + foot(coll) };
+    }
+    default: return null;
+  }
+}
+
+/* ===================== 表单提交（严格按照 container + v，无 form 变量） ===================== */
+function readFile(input) {
+  return new Promise((res) => {
+    if (!input || !input.files || !input.files[0]) return res(null);
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result); fr.onerror = () => res(null);
+    fr.readAsDataURL(input.files[0]);
+  });
+}
+async function handleForm(fBtn) {
+  const container = fBtn.closest('form') || $('#modalBox');
+  const v = id => { const e = $('#' + id, container); return e ? e.value : ''; };
+  const chk = id => { const e = $('#' + id, container); return !!(e && e.classList.contains('on')); };
+  const act = fBtn.getAttribute('data-form');
+  const id = v('f_id') || uid();
+  if (act.indexOf('reviewInline:') === 0) {
+    const tab = act.split(':')[1];
+    const g = (iid) => { const e = document.getElementById(iid); return e ? e.value : ''; };
+    S.reviews = S.reviews || {};
+    const arr = S.reviews[tab] || (S.reviews[tab] = []);
+    const extra = (tab === 'daily') ? { good: g('rv_a'), bad: g('rv_b'), next: g('rv_c') } : { think: g('rv_big') };
+    arr.push(Object.assign({ id: uid(), date: g('rv_date'), title: g('rv_title') }, extra));
+    const bonus = tab === 'daily' ? 15 : tab === 'weekly' ? 30 : 50;
+    addCoins(bonus); save(); render(); toast('复盘完成 +' + bonus + ' 薯条', 'gold'); sproutSay(sproutOp('review')); return;
+  }
+  let obj = null;
+
+  try {
+    if (act === 'timeBlocks') {
+      obj = { id, start: v('f_start'), end: v('f_end'), title: v('f_title'), cat: v('f_cat'), done: false };
+    } else if (act === 'todos') {
+      obj = { id, title: v('f_title'), cat: v('f_cat'), due: v('f_due'), remind: v('f_remind'), done: false };
+    } else if (act === 'studyPlans') {
+      const steps = $$('.step-text', container).map(inp => ({ id: inp.dataset.sid || uid(), text: inp.value, done: inp.dataset.done === '1' })).filter(s => s.text.trim());
+      const done = steps.length > 0 && steps.every(s => s.done);
+      obj = { id, title: v('f_title'), desc: v('f_desc'), due: v('f_due'), steps, done };
+    } else if (act === 'workouts') {
+      const strength = $$('.str-row', container).map(r => ({ part: $('.s-part', r).value, sets: $('.s-sets', r).value, reps: $('.s-reps', r).value, weight: $('.s-w', r).value })).filter(x => x.part.trim());
+      obj = { id, type: v('f_type'), date: v('f_date'), strength, distance: v('f_dist'), duration: v('f_dur'), hr: v('f_hr'), note: v('f_note') };
+    } else if (act === 'researchPapers') {
+      obj = { id, title: v('f_title'), author: v('f_author'), year: v('f_year'), status: v('f_status'),
+        venue: v('f_venue'), rating: v('f_rating'), tags: v('f_tags').split(',').map(s => s.trim()).filter(Boolean),
+        progress: v('f_progress'), cited: chk('f_cited'), attachment: v('f_attach'), notes: v('f_notes') };
+    } else if (act === 'researchTasks') {
+      obj = { id, title: v('f_title'), note: v('f_note'), done: chk('f_done') };
+    } else if (act === 'researchMilestones') {
+      obj = { id, title: v('f_title'), date: v('f_date'), pct: v('f_pct'), done: chk('f_done') };
+    } else if (act === 'researchRisks') {
+      obj = { id, text: v('f_text'), level: v('f_level'), mitigate: v('f_mit') };
+    } else if (act === 'researchMaterials') {
+      obj = { id, title: v('f_title'), kind: v('f_kind'), ref: v('f_ref'), note: v('f_note') };
+    } else if (act === 'researchManuscripts') {
+      obj = { id, title: v('f_title'), status: v('f_status'), venue: v('f_venue'), notes: v('f_notes') };
+    } else if (act === 'inspItems') {
+      const ex = id ? (S.inspiration.items.find(x => x.id === id)) : null;
+      const fileEl = $('#f_media', container);
+      let media = ex ? (ex.media || '') : '';
+      let mediaType = ex ? (ex.mediaType || '') : '';
+      if (fileEl && fileEl.files && fileEl.files[0]) { const d = await readFile(fileEl); const isVid = fileEl.files[0].type.indexOf('video') >= 0; media = await saveMedia(d, isVid ? 'video' : 'img'); mediaType = isVid ? 'video' : 'img'; }
+      obj = { id, text: v('f_text'), cat: v('f_cat'), at: (ex && ex.at) || now(), media, mediaType };
+    } else if (act === 'inspCats') {
+      obj = { id, name: v('f_name'), color: v('f_color') };
+    } else if (act === 'readingBooks') {
+      const ex = id ? (S.reading.books.find(x => x.id === id)) : null;
+      const coverEl = $('#f_cover', container);
+      let cover = ex ? (ex.cover || '') : '';
+      if (coverEl && coverEl.files && coverEl.files[0]) cover = await saveMedia(await readFile(coverEl), 'img');
+      obj = { id, title: v('f_title'), author: v('f_author'), status: v('f_status'), cat: v('f_cat'), progress: v('f_progress'), cover };
+    } else if (act === 'readingNotes') {
+      const ex = id ? (S.reading.notes.find(x => x.id === id)) : null;
+      const fileEl = $('#f_media', container);
+      let media = ex ? (ex.media || '') : ''; let mediaType = ex ? (ex.mediaType || '') : '';
+      if (fileEl && fileEl.files && fileEl.files[0]) { const d = await readFile(fileEl); const isVid = fileEl.files[0].type.indexOf('video') >= 0; media = await saveMedia(d, isVid ? 'video' : 'img'); mediaType = isVid ? 'video' : 'img'; }
+      const book = (S.reading.books || []).find(b => b.id === v('f_book'));
+      obj = { id, type: v('f_type'), bookId: v('f_book'), bookName: book ? book.title : '', text: v('f_text'), rating: v('f_rating'), media, mediaType, cat: book ? book.cat : 'r_def' };
+    } else if (act === 'readingCats') {
+      obj = { id, name: v('f_name'), color: v('f_color') };
+    } else if (act === 'financeTx') {
+      obj = { id, kind: v('f_kind'), amount: Number(v('f_amount')) || 0, cat: v('f_cat'), account: v('f_account'), date: v('f_date') || today(), note: v('f_note') };
+      if (!id && obj.kind === 'expense' && obj.account) {
+        const cr = (S.finance.credits || []).find(c => c.platform === obj.account);
+        if (cr) cr.used = Number(cr.used || 0) + obj.amount;
+      }
+    } else if (act === 'financeBudgets') {
+      obj = { id, name: v('f_name'), limit: Number(v('f_limit')) || 0, spent: Number(v('f_spent')) || 0 };
+    } else if (act === 'financeGoals') {
+      obj = { id, name: v('f_name'), target: Number(v('f_target')) || 0, saved: Number(v('f_saved')) || 0 };
+    } else if (act === 'financeCredits') {
+      obj = { id, platform: v('f_platform'), limit: Number(v('f_limit')) || 0, used: Number(v('f_used')) || 0, min: Number(v('f_min')) || 0, due: v('f_due') };
+    } else if (act === 'financeSalary') {
+      obj = { id, name: v('f_name'), amount: Number(v('f_amount')) || 0, cycle: v('f_cycle') };
+    } else if (act === 'rewardsList') {
+      obj = { id, name: v('f_name'), cost: Number(v('f_cost')) || 0, desc: v('f_desc') };
+    } else if (act === 'achievements') {
+      obj = { id, name: v('f_name'), date: v('f_date'), joy: Number(v('f_joy')) || 3, reward: v('f_reward') };
+    } else if (act === 'reviewsDaily' || act === 'reviewsWeekly' || act === 'reviewsMonthly') {
+      const tab = act.replace('reviews', '').toLowerCase();
+      const extra = (tab === 'daily') ? { good: v('f_a'), bad: v('f_b'), next: v('f_c') } : { think: v('f_big') };
+      obj = Object.assign({ id, date: v('f_date'), title: v('f_title') }, extra);
+      upsert(act, id, obj);
+      const bonus = tab === 'daily' ? 15 : tab === 'weekly' ? 30 : 50;
+      addCoins(bonus); closeModal(); sproutSay(sproutOp('review')); toast('复盘完成 +' + bonus + ' 薯条', 'gold'); return;
+    } else if (act === 'course') {
+      const cell = v('f_cell'); const name = v('f_name');
+      if (!name.trim()) { delete S.courses.grid[cell]; } else { S.courses.grid[cell] = { name, teacher: v('f_teacher'), room: v('f_room'), time: v('f_time'), note: v('f_note') }; }
+      save(); render(); closeModal(); toast('已保存', 'ok'); return;
+    } else if (act === 'hw') {
+      obj = { id, title: v('f_title'), course: v('f_course'), due: v('f_due'), done: (item && item.done) || false };
+    } else if (act === 'bib') {
+      parseBib(v('f_bib')); save(); render(); closeModal(); toast('已导入文献', 'ok'); return;
+    } else if (act === 'focusCustom') {
+      const m = Number(v('f_min')) || 25; S.settings.focusDuration = m; save(); resetFocus(); closeModal(); return;
+    } else {
+      toast('未知表单：' + act, 'err'); return;
+    }
+  } catch (err) { toast('保存出错：' + err.message, 'err'); console.error(err); return; }
+
+  if (!obj) { toast('表单解析失败', 'err'); return; }
+  /* 根据 act 找到对应集合并写入 */
+  const collMap = {
+    timeBlocks: 'timeBlocks', todos: 'todos', studyPlans: 'studyPlans', workouts: 'workouts',
+    researchPapers: 'researchPapers', researchTasks: 'researchTasks', researchMilestones: 'researchMilestones',
+    researchRisks: 'researchRisks', researchMaterials: 'researchMaterials', researchManuscripts: 'researchManuscripts',
+    inspItems: 'inspItems', inspCats: 'inspCats', readingBooks: 'readingBooks', readingNotes: 'readingNotes',
+    readingCats: 'readingCats', financeTx: 'financeTx', financeBudgets: 'financeBudgets', financeGoals: 'financeGoals',
+    financeCredits: 'financeCredits', financeSalary: 'financeSalary', rewardsList: 'rewardsList', achievements: 'achievements', hw: 'coursesHomework'
+  };
+  const coll = collMap[act];
+  if (!coll) { toast('未登记集合', 'err'); return; }
+  if (coll === 'coursesHomework') { // 作业：每月编辑计数不在此限制
+    upsert(coll, id, obj);
+  } else if (coll === 'rewardsList') {
+    const edits = S.rewards.edits || 0;
+    if (!id && edits >= 3) { toast('本月奖励编辑次数已用完', 'err'); return; }
+    if (!id) S.rewards.edits = edits + 1;
+    upsert(coll, id, obj); checkAch();
+  } else {
+    upsert(coll, id, obj);
+  }
+  closeModal(); toast(dialog('saved'), 'ok'); sproutSay(sproutOp('save'));
+}
+function parseBib(text) {
+  const entries = text.split('@').slice(1);
+  entries.forEach(e => {
+    const get = (f) => { const m = e.match(new RegExp(f + '\\s*=\\s*[{"]([^}"]*)["}]', 'i')); return m ? m[1].replace(/[{}]/g, '').trim() : ''; };
+    const title = get('title'); if (!title) return;
+    S.research.papers.push({ id: uid(), title, author: get('author'), year: get('year'), status: '想读', venue: get('journal') || get('booktitle') || '', rating: 0, progress: 0, cited: false, tags: [], notes: '', attachment: '' });
+  });
+}
+
+/* ===================== 动作分发 ===================== */
+async function handleAction(act, btn, e) {
+  const p = act.split(':'); const head = p[0];
+  if (head === 'go') { navigateTo(p[1]); sproutSay(pick(SPROUT_LINES[p[1]] || SPROUT_LINES.overview)); return; }
+  if (head === 'add' || head === 'addT') { openAdd(p[1]); return; }
+  if (head === 'edit') { openEdit(p[1], p[2]); return; }
+  if (head === 'del') { delColl(p[1], p[2]); return; }
+  if (head === 'done') { toggleDone(p[1], p[2]); return; }
+  if (head === 'exchange') { exchangeReward(p[1]); return; }
+  if (head === 'tab') {
+    if (p[1] === 'research') TAB.research = p[2];
+    else if (p[1] === 'review') TAB.review = p[2];
+    else if (p[1] === 'news') S.news.tab = p[2];
+    render(); return;
+  }
+  if (head === 'inspFilter') { TAB.insp = p[1]; render(); return; }
+  if (head === 'rFilter') { if (p[1] === 'status') TAB.readStatus = p[2]; else TAB.readCat = p[2]; render(); return; }
+  if (head === 'addStep') { const plan = (S.studyPlans || []).find(x => x.id === p[1]); if (plan) { plan.steps = plan.steps || []; plan.steps.push({ id: uid(), text: '新步骤', done: false }); save(); render(); } return; }
+  if (head === 'editCourse') { openCourseForm(p[1]); return; }
+  if (head === 'saveResearchText') { if (p[1] === 'questions') { S.research.questions = $('#rs_questions') ? $('#rs_questions').value : ''; } save(); render(); toast('已保存', 'ok'); sproutSay(sproutOp('save')); return; }
+  if (head === 'focusPreset') { if (p[1] === '0') { openModal(fNum('f_min', '自定义专注时长(分钟)', S.settings.focusDuration) + foot('focusCustom'), '自定义专注'); } else { S.settings.focusDuration = Number(p[1]); resetFocus(); save(); } return; }
+  if (head === 'setDark') { S.settings.dark = (p[1] === '1'); applyTheme(); save(); render(); return; }
+  if (head === 'setColor') { S.settings.color = p[1]; applyTheme(); save(); render(); return; }
+  if (head === 'setDensity') { S.settings.density = p[1]; applyTheme(); save(); render(); return; }
+  if (head === 'newsSave') { const it = (S.news.saved || []).find(x => x.id === p[1]); if (it) { it.saved = !it.saved; save(); render(); } return; }
+
+  switch (act) {
+    case 'closeModal': closeModal(); break;
+    case 'checkin': doCheckin(); break;
+    case 'sproutToggle': toggleSprout(); break;
+    case 'sproutBrief': readBrief(); break;
+    case 'toggleDark': S.settings.dark = !S.settings.dark; applyTheme(); save(); renderTop(); break;
+    case 'toggleSidebar': $('#app').classList.toggle('collapsed'); break;
+    case 'inspFilter': TAB.insp = p[1]; render(); break;
+    case 'rFilter': if (p[1] === 'status') TAB.readStatus = p[2]; else TAB.readCat = p[2]; render(); break;
+    case 'addStep': { const plan = (S.studyPlans || []).find(x => x.id === p[1]); if (plan) { plan.steps = plan.steps || []; plan.steps.push({ id: uid(), text: '新步骤', done: false }); save(); render(); } break; }
+    case 'addStepRow': { const box = $('#stepRows'); if (box) box.insertAdjacentHTML('beforeend', `<div class="step-row"><input class="step-text" data-sid="" data-done="0" placeholder="步骤内容"><button class="mini danger" data-action="delStepRow" type="button">${ico('x')}</button></div>`); break; }
+    case 'delStepRow': { const row = btn.closest('.step-row'); if (row) row.remove(); break; }
+    case 'addStrRow': { const box = $('#strRows'); if (box) box.insertAdjacentHTML('beforeend', `<div class="str-row"><input class="s-part" placeholder="部位"><input class="s-sets" placeholder="组"><input class="s-reps" placeholder="次"><input class="s-w" placeholder="kg"><button class="mini danger" data-action="delStrRow" type="button">${ico('x')}</button></div>`); break; }
+    case 'delStrRow': { const row = btn.closest('.str-row'); if (row) row.remove(); break; }
+    case 'editCourse': { openCourseForm(p[1]); break; }
+    case 'addHw': { openAdd('coursesHomework'); break; }
+    case 'importBib': { openModal(fArea('f_bib', '粘贴 BibTeX / Zotero 导出文本', '', 8) + foot('bib'), '导入文献', true); break; }
+    case 'saveResearchText': {
+      if (p[1] === 'questions') { S.research.questions = $('#rs_questions') ? $('#rs_questions').value : ''; }
+      save(); render(); toast('已保存', 'ok'); sproutSay(sproutOp('save')); break;
+    }
+    case 'toggleEthics': { S.research.design.ethicsApproved = !S.research.design.ethicsApproved; save(); render(); break; }
+    case 'saveDesign': {
+      const d = S.research.design;
+      d.approach = $('#ds_approach').value; d.population = $('#ds_population').value; d.sampling = $('#ds_sampling').value;
+      d.methods = $('#ds_methods').value.split(',').map(s => s.trim()).filter(Boolean);
+      d.variables = $('#ds_vars').value.split(',').map(s => s.trim()).filter(Boolean);
+      d.ethicsNo = $('#ds_eno').value; d.ethicsDate = $('#ds_edate').value;
+      save(); render(); toast('已保存研究设计', 'ok'); break;
+    }
+    case 'saveAssets': { S.finance.assets.online = Number($('#as_online').value) || 0; S.finance.assets.cash = Number($('#as_cash').value) || 0; save(); render(); toast('资产已保存', 'ok'); break; }
+    case 'newsRefresh': { await captureNews(); render(); toast('已刷新热点' + (S.settings.newsApi ? '（联网）' : '（本地）'), 'ok'); break; }
+    case 'newsCapture': { await captureNews(); render(); toast('已捕捉最新热点，并同步到「实时热点」', 'ok'); break; }
+    case 'toggleNewsAuto': { S.news.autoCapture = !S.news.autoCapture; save(); render(); break; }
+    case 'aiGuide': { openGuide(); break; }
+    case 'aiSend': {
+      const inp = $('#aiInput'); if (!inp) break;
+      const q = inp.value.trim();
+      const photo = AI_PHOTO;
+      if (!q && !photo) { toast('先输入点什么，或拍张照片吧～', 'err'); break; }
+      if (voiceOn && voiceRec) { try { voiceRec.stop(); } catch (e) {} }
+      inp.value = '';
+      S.research.aiChat = (S.research.aiChat || []);
+      const web = !!S.settings.aiWeb;
+      S.research.aiChat.push({ role: 'user', content: q || (photo ? '图片' : ''), image: photo || '' });
+      S.research.aiChat.push({ role: 'assistant', content: '⏳ 正在思考' + (photo ? '并识别图片' : '') + (web ? '并联网检索资料' : '') + '…', pending: true, web: web });
+      render(); scrollAI();
+      let sources = [];
+      if (web) { try { sources = await webSearch(q || (photo ? '这张图片相关内容' : ''), 5); } catch (e) { sources = []; } }
+      const ans = await askAI(q, sources, photo);
+      const last = S.research.aiChat[S.research.aiChat.length - 1];
+      if (last) { last.content = ans; last.pending = false; last.sources = sources; }
+      AI_PHOTO = null;
+      save(); render(); scrollAI(); sproutSay('AI 已回复，去看看？');
+      break;
+    }
+    case 'aiWebToggle': { S.settings.aiWeb = !S.settings.aiWeb; save(); render(); break; }
+    case 'aiVoice': { voiceToggle(); break; }
+    case 'aiPhoto': { const fi = $('#aiPhotoFile'); if (fi) fi.click(); break; }
+    case 'aiPhotoClear': { AI_PHOTO = null; render(); break; }
+    case 'aiClear': { S.research.aiChat = []; save(); render(); break; }
+    case 'aiQuick': { const q = btn.getAttribute('data-q') || ''; const inp = $('#aiInput'); if (inp) { inp.value = q; inp.focus(); } break; }
+    case 'saveNet': {
+      S.settings.searchApi = $('#st_searchapi') ? $('#st_searchapi').value : '';
+      S.settings.newsApi = $('#st_newsapi') ? $('#st_newsapi').value : '';
+      S.settings.ai = S.settings.ai || {};
+      S.settings.ai.api = $('#st_aiapi') ? $('#st_aiapi').value : '';
+      S.settings.ai.key = $('#st_aikey') ? $('#st_aikey').value : '';
+      S.settings.ai.model = $('#st_aimodel') ? $('#st_aimodel').value : '';
+      S.settings.syncFolder = $('#st_syncfolder') ? $('#st_syncfolder').value.trim() : '';
+      const gh = S.settings.gh = S.settings.gh || {};
+      gh.user = $('#st_ghuser') ? $('#st_ghuser').value.trim() : '';
+      gh.repo = $('#st_ghrepo') ? $('#st_ghrepo').value.trim() : '';
+      gh.token = $('#st_ghtoken') ? $('#st_ghtoken').value.trim() : '';
+      gh.path = ($('#st_ghpath') ? $('#st_ghpath').value.trim() : '') || 'backup/jincheng-backup.json';
+      save(); render(); toast('已保存配置', 'ok'); break;
+    }
+    case 'ghPush': { await ghPush(); break; }
+    case 'ghPull': { await ghPull(); break; }
+    case 'aiTest': { const r = await askAI('你好，简单介绍一下你能做什么'); toast('AI 回复：' + r.slice(0, 30) + '…', 'ok'); break; }
+    case 'lottery': doLottery(); break;
+    case 'testNotif': toast('这是一条测试通知 ✦', 'ok'); sproutSay('通知测试：一切正常。'); break;
+    case 'toggleNotif': S.settings.notifications = !S.settings.notifications; save(); render(); break;
+    case 'toggleSound': S.settings.sound = !S.settings.sound; save(); render(); break;
+    case 'setDark': S.settings.dark = (p[1] === '1'); applyTheme(); save(); render(); break;
+    case 'setColor': S.settings.color = p[1]; applyTheme(); save(); render(); break;
+    case 'setDensity': S.settings.density = p[1]; applyTheme(); save(); render(); break;
+    case 'saveProfile': {
+      const pr = S.profile;
+      pr.nickname = $('#st_nick').value; pr.name = $('#st_name').value; pr.gender = $('#st_gender').value;
+      pr.birthday = $('#st_birth').value; pr.motto = $('#st_motto').value;
+      save(); render(); toast('资料已保存', 'ok'); break;
+    }
+    case 'syncNow': syncNow(); break;
+    case 'exportJson': exportJson(); break;
+    case 'exportCsv': exportCsv(); break;
+    case 'clearDemo': S = DEFAULT_STATE(); save(); render(); toast('已清空示例数据', 'ok'); break;
+    case 'importJson': $('#importFile').click(); break;
+    case 'clearData': if (confirm('确定清空所有数据？此操作不可恢复。')) { S = DEFAULT_STATE(); save(); render(); toast('数据已清空', 'ok'); } break;
+    case 'resetGrowth': if (confirm('确定清零成长值（等级/经验/薯条/连签）？')) { S.profile.level = 1; S.profile.xp = 0; S.profile.coins = 0; S.profile.streak = 0; S.profile.longestStreak = 0; save(); render(); toast('成长值已清零', 'ok'); } break;
+    case 'focusPreset': if (p[1] === '0') { openModal(fNum('f_min', '自定义专注时长(分钟)', S.settings.focusDuration) + foot('focusCustom'), '自定义专注'); } else { S.settings.focusDuration = Number(p[1]); resetFocus(); save(); } break;
+    case 'focusStart': startFocus(); break;
+    case 'focusPause': pauseFocus(); break;
+    case 'focusReset': resetFocus(); break;
+    default: break;
+  }
+}
+
+/* 课程格编辑 */
+function openCourseForm(cell) {
+  const c = S.courses.grid[cell] || {};
+  openModal(
+    fText('f_name', '课程名', c.name) + `<div class="grid2">` + fText('f_teacher', '老师', c.teacher) + fText('f_room', '教室', c.room) + `</div>` +
+    fText('f_time', '时间', c.time) + fArea('f_note', '备注', c.note, 2) + `<input type="hidden" id="f_cell" value="${cell}">` + foot('course'),
+    c.name ? '编辑课程' : '新增课程'
+  );
+}
+/* 动态复选框（data-toggle 标记） */
+function bindToggle() {
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-toggle]');
+    if (t) { const on = t.classList.toggle('on'); t.innerHTML = on ? ico('check') : ''; }
+  });
+}
+
+/* ===================== 专注计时器 ===================== */
+let focusTimer = null, focusRemain = 0;
+function tickFocus() {
+  const m = Math.floor(focusRemain / 60), s = focusRemain % 60;
+  const el = $('#focusTime'); if (el) el.textContent = pad2(m) + ':' + pad2(s);
+  if (focusRemain <= 0) {
+    clearInterval(focusTimer); focusTimer = null;
+    const xp = S.settings.focusDuration >= 25 ? 15 : 10;
+    addXP(xp); addCoins(5); markActiveDay(today());
+    toast('专注完成！+' + xp + ' XP', 'gold'); sproutSay(pick(DIALOGS.focusDone)());
+  } else focusRemain--;
+}
+function startFocus() {
+  if (focusTimer) return;
+  if (focusRemain <= 0) focusRemain = (S.settings.focusDuration || 25) * 60;
+  focusTimer = setInterval(tickFocus, 1000);
+}
+function pauseFocus() { clearInterval(focusTimer); focusTimer = null; }
+function resetFocus() { pauseFocus(); focusRemain = (S.settings.focusDuration || 25) * 60; const el = $('#focusTime'); if (el) el.textContent = pad2(S.settings.focusDuration || 25) + ':00'; }
+
+/* ===================== 签到 / 活跃日 ===================== */
+function doCheckin() {
+  const t = today();
+  if (S.profile.lastCheckin === t) { toast('今天已经签到啦～', 'gold'); return; }
+  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  S.profile.streak = (S.profile.lastCheckin === y) ? S.profile.streak + 1 : 1;
+  S.profile.longestStreak = Math.max(S.profile.longestStreak, S.profile.streak);
+  S.profile.lastCheckin = t;
+  addCoins(5); addXP(5); markActiveDay(t);
+  save(); render();
+  toast(dialog('checkin'), 'gold'); sproutSay(dialog('checkinStreak', S.profile.streak));
+}
+function markActiveDay(d) {
+  if (!(S.activeDays || []).includes(d)) { S.activeDays.push(d); save(); checkAch(); }
+}
+
+/* ===================== 抽奖 / 兑换 / 同步 / 导出 ===================== */
+function doLottery() {
+  if ((S.rewardPool.tickets || 0) <= 0) { toast('本月抽奖券已用完', 'err'); return; }
+  S.rewardPool.tickets -= 1;
+  const gain = 10 + Math.floor(Math.random() * 41);
+  addCoins(gain);
+  S.rewardPool.history.push({ at: today(), gain });
+  save(); render();
+  toast('🎉 抽中 ' + gain + ' 薯条！', 'gold'); sproutSay('运气不错，抽中 ' + gain + ' 薯条～');
+}
+function exchangeReward(id) {
+  const r = (S.rewards.list || []).find(x => x.id === id); if (!r) return;
+  if (S.profile.coins < r.cost) { toast('薯条不足', 'err'); return; }
+  addCoins(-r.cost);
+  S.rewards.history.push({ id: uid(), name: r.name, cost: r.cost, at: today() });
+  save(); render(); toast('已兑换：' + r.name, 'gold'); sproutSay('兑换成功，犒劳一下自己吧。');
+}
+async function ghCall(method, apiPath, body) {
+  const g = S.settings.gh || {};
+  if (!g.user || !g.repo || !g.token) { toast('请先在「GitHub 同步」面板填写用户名 / 仓库 / Token', 'err'); return null; }
+  const headers = { 'Authorization': 'Bearer ' + g.token, 'Accept': 'application/vnd.github+json' };
+  try {
+    const res = await fetch('https://api.github.com' + apiPath, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    if (!res.ok) { const t = await res.text().catch(() => ''); toast('GitHub ' + res.status + '：' + t.slice(0, 90), 'err'); return null; }
+    if (res.status === 204) return {};
+    return await res.json();
+  } catch (e) { toast('网络错误：' + e.message, 'err'); return null; }
+}
+async function ghPush() {
+  const g = S.settings.gh || {};
+  const apiPath = '/repos/' + encodeURIComponent(g.user) + '/' + encodeURIComponent(g.repo) + '/contents/' + encodeURIComponent(g.path);
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify({ version: 2, data: S }))));
+  const existing = await ghCall('GET', apiPath);
+  const body = { message: 'sync ' + new Date().toISOString(), content };
+  if (existing && existing.sha) body.sha = existing.sha;
+  const r = await ghCall('PUT', apiPath, body);
+  if (r) toast('已上传备份到 GitHub ✔', 'ok');
+}
+async function ghPull() {
+  const g = S.settings.gh || {};
+  const apiPath = '/repos/' + encodeURIComponent(g.user) + '/' + encodeURIComponent(g.repo) + '/contents/' + encodeURIComponent(g.path);
+  const r = await ghCall('GET', apiPath);
+  if (r === null) return;
+  if (!r.content) { toast('该仓库路径还没有备份文件，请先上传一次', 'err'); return; }
+  try {
+    const txt = decodeURIComponent(escape(atob(r.content.replace(/\n/g, ''))));
+    const obj = JSON.parse(txt);
+    if (obj && obj.data) { S = obj.data; save(); render(); toast('已从 GitHub 拉取并恢复 ✔', 'ok'); }
+  } catch (e) { toast('恢复失败：' + e.message, 'err'); }
+}
+function exportJson() {
+  const data = { version: 2, data: S };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'jincheng-backup.json'; a.click();
+  toast('已导出 JSON', 'ok');
+}
+
+function exportCsv() {
+  const tx = (S.finance.transactions || []);
+  if (!tx.length) { toast('还没有流水可导出', 'gold'); return; }
+  const head = ['日期', '类型', '分类', '金额', '备注'];
+  const rows = tx.map(function(t){ return [t.date || '', t.kind === 'income' ? '收入' : '支出', t.cat || '', t.amount || '', (t.note || '').replace(String.fromCharCode(10), ' ').replace(',', ' ')]; });
+  const q = function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; };
+  const csv = String.fromCharCode(65279) + [head].concat(rows).map(function(r){ return r.map(q).join(','); }).join(String.fromCharCode(13) + String.fromCharCode(10));
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'jincheng-finance-' + today() + '.csv'; a.click();
+  toast('已导出 CSV', 'ok');
+}
+function importJsonFile(file) {
+  const fr = new FileReader();
+  fr.onload = () => { try { const j = JSON.parse(fr.result); S = migrate(j.data || j); save(); render(); toast('导入成功，已还原', 'ok'); } catch (e) { toast('导入失败：' + e.message, 'err'); } };
+  fr.readAsText(file);
+}
+function readBrief() {
+  const txt = ($('#briefText') || {}).textContent || '今天也要日拱一卒。';
+  speak(txt);
+}
+
+/* ===================== 时事热点：自动捕捉 ===================== */
+async function captureNews() {
+  const keep = (S.news.saved || []).filter(n => n.saved);
+  const api = S.settings.newsApi;
+  if (USE_API && api) {
+    try {
+      const r = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tabs: NEWS_TABS }) });
+      if (r.ok) {
+        const j = await r.json();
+        const arr = Array.isArray(j) ? j : (j.items || j.data || []);
+        if (Array.isArray(arr) && arr.length) {
+          S.news.saved = keep.concat(arr.filter(x => x && x.title).map(it => ({ id: uid(), tab: it.tab || 'academic', title: it.title, summary: it.summary || '', source: it.source || '', url: it.url || '', image: it.image || '', at: now(), saved: false })));
+          S.news.updated = Date.now(); save(); return;
+        }
+      }
+    } catch (e) { /* 联网失败，回退本地热点池 */ }
+  }
+  seedNews(); save();
+}
+async function maybeAutoCapture() {
+  if (!S.news.autoCapture) return;
+  const up = S.news.updated || 0;
+  const stale = !up || (Date.now() - up) > 30 * 60 * 1000;
+  if (stale) { await captureNews(); }
+}
+
+/* ===================== AI 助手：联动大模型 ===================== */
+function scrollAI() { const l = $('#aiLog'); if (l) l.scrollTop = l.scrollHeight; }
+
+/* 语音输入：浏览器原生 Web Speech API（Chrome / Edge 桌面版最佳），开启后持续聆听，
+   实时把识别结果写入输入框；再次点击停止。无需配置、免费。 */
+function voiceToggle() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const inp = $('#aiInput');
+  if (!SR) { toast('当前浏览器不支持语音输入，建议用 Chrome / Edge 桌面版', 'err'); return; }
+  if (voiceOn) { try { voiceRec && voiceRec.stop(); } catch (e) {} voiceOn = false; render(); return; }
+  try {
+    voiceRec = new SR();
+    voiceRec.lang = 'zh-CN';
+    voiceRec.interimResults = true;
+    voiceRec.continuous = true;
+    voiceRec.maxAlternatives = 1;
+    const committed = () => (inp ? inp.value : '');
+    voiceRec.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const tr = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += tr; else interim += tr;
+      }
+      if (inp) inp.value = committed() + (committed() && final ? ' ' : '') + final + (interim ? (final ? ' ' : '') + interim : '');
+    };
+    voiceRec.onerror = (e) => {
+      let msg = '语音识别出错，请重试';
+      if ((e && e.error === 'not-allowed') || (e && e.error === 'service-not-allowed')) msg = '麦克风权限被拒绝，请在浏览器地址栏允许后重试';
+      else if (e && e.error === 'no-speech') msg = '没听到声音，请再说一次';
+      else if (e && e.error === 'network') msg = '语音服务联网失败，请检查网络或用文字输入';
+      toast(msg, 'err'); voiceOn = false; render();
+    };
+    voiceRec.onend = () => { if (voiceOn) { try { voiceRec.start(); } catch (e2) {} } else { render(); } };
+    voiceRec.start();
+    voiceOn = true; render();
+    toast('正在聆听，再次点击停止', 'ok');
+  } catch (e) { toast('无法启动语音输入：' + ((e && e.message) || e), 'err'); }
+}
+
+/* 真实联网搜索资料：默认用维基百科开放搜索 API（无需 Key、支持 CORS），
+   也可在「设置·联网与 AI」填写自定义搜索接口（期望返回 {items:[{title,url,snippet}]}） */
+async function webSearch(q, n) {
+  n = n || 5;
+  const raw = (S.settings && S.settings.searchApi) ? S.settings.searchApi.trim() : '';
+  const lang = (S.settings && S.settings.searchLang) || 'zh';
+  let url, parse;
+  const isWiki = !raw || /wikipedia|w\/api\.php/.test(raw);
+  if (isWiki) {
+    const base = raw || ('https://' + lang + '.wikipedia.org/w/api.php');
+    url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=query&list=search&srsearch=' + encodeURIComponent(q) + '&srlimit=' + n + '&format=json&origin=*';
+    parse = (j) => {
+      const rows = (j && j.query && j.query.search) || [];
+      return rows.map(x => ({
+        title: x.title,
+        url: 'https://' + lang + '.wikipedia.org/wiki/' + encodeURIComponent(String(x.title || '').replace(/ /g, '_')),
+        snippet: String(x.snippet || '').replace(/<[^>]+>/g, '')
+      }));
+    };
+  } else {
+    url = raw + (raw.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q) + '&n=' + n;
+    parse = (j) => {
+      const arr = Array.isArray(j) ? j : (j.items || j.results || j.data || []);
+      return (Array.isArray(arr) ? arr : []).map(x => ({ title: x.title || x.name || '资料', url: x.url || x.link || '', snippet: x.snippet || x.desc || x.summary || '' }));
+    };
+  }
+  try {
+    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const out = parse(j).filter(x => x.url || x.title);
+    return out.slice(0, n);
+  } catch (e) { return []; }
+}
+
+function aiLocal(prompt, sources, image) {
+  sources = sources || [];
+  const p = String(prompt || '').toLowerCase();
+  const R = S.research, todos = S.todos || [], insp = S.inspiration.items || [];
+  const undone = (todos || []).filter(t => !t.done);
+  if (image) {
+    if (sources.length) {
+      const list = sources.map((s, i) => (i + 1) + '. 「' + (s.title || '资料') + '」' + (s.url ? ('\n   🔗 ' + s.url) : '') + (s.snippet ? ('\n   ' + (s.snippet.length > 140 ? s.snippet.slice(0, 140) + '…' : s.snippet)) : '')).join('\n');
+      return '已收到你上传的图片。当前未配置支持视觉的大模型接口，我无法识别图片内容，但已按你的文字' + (p ? '「' + prompt + '」' : '') + '联网检索到以下资料供参考：\n' + list + '\n\n在「设置·联网与 AI」配置支持视觉的 OpenAI 兼容接口后，我可以直接识别图片并查找资料。';
+    }
+    return '已收到你上传的图片。当前未配置支持视觉的大模型接口，暂时无法识别图片内容。配置 OpenAI 兼容且支持 vision 的接口（如 gpt-4o）后，我可以识别图片并帮你查找相关资料。你也可以直接描述图片内容，我来帮你检索。';
+  }
+  if (sources.length) {
+    const list = sources.map((s, i) => (i + 1) + '. 「' + (s.title || '资料') + '」' + (s.url ? ('\n   🔗 ' + s.url) : '') + (s.snippet ? ('\n   ' + (s.snippet.length > 140 ? s.snippet.slice(0, 140) + '…' : s.snippet)) : '')).join('\n');
+    const intro = (/资料|文献|找|搜索|search|paper|reference|查|了解|是什么/.test(p))
+      ? '根据你的请求，我联网检索到以下真实资料：'
+      : '关于你的问题，我联网检索到这些资料供你参考：';
+    return intro + '\n' + list + '\n\n（以上为联网检索到的资料。在「设置·联网与 AI」配置大模型接口后，我可以基于这些资料为你做总结、对比与引用。）';
+  }
+  if (/资料|文献|找|搜索|search|paper|reference/.test(p)) {
+    const papers = (R.papers || []).slice(0, 5).map(x => '· 《' + (x.title || '未命名') + '》' + (x.venue ? '（' + x.venue + '）' : '')).join('\n');
+    const ins = (insp || []).slice(0, 3).map(x => '· ' + (x.text || '').slice(0, 30)).join('\n');
+    return '为你整理了现有资料：\n文献库（' + (R.papers || []).length + ' 篇）：\n' + (papers || '（暂无）') + '\n灵感（' + (insp || []).length + ' 条）：\n' + (ins || '（暂无）') + '\n\n需要我按主题筛选，或帮你起草文献检索式吗？';
+  }
+  if (/待办|今日|任务|todo|今天|安排/.test(p)) {
+    const td = undone.slice(0, 8).map(t => '· ' + t.title).join('\n');
+    return '你当前有 ' + undone.length + ' 条未完成待办：\n' + (td || '（都很棒，已清空）') + '\n\n要不要我帮你按紧急度排个序？';
+  }
+  if (/综述|提纲|outline|大纲|框架/.test(p)) {
+    const ks = (R.papers || []).slice(0, 5).map((x, i) => (i + 1) + '. ' + (x.title || '文献' + (i + 1))).join('\n');
+    return '一份文献综述提纲草稿：\n1. 研究背景与意义\n2. 国内外研究现状\n3. 主要方法对比\n   ' + ((ks || '（先去「文献库」添加几篇文献，我再来细化）').split('\n').join('\n   ')) + '\n4. 研究 gaps 与本文贡献\n5. 总结与展望\n\n告诉我你的主题，我帮你填充每节要点。';
+  }
+  if (/周报|总结|日报|复盘|weekly|小结/.test(p)) {
+    return '本周小结草稿：\n· 活跃天数：' + (S.activeDays || []).length + ' 天\n· 待办：' + undone.length + ' 条未完成\n· 文献：' + (R.papers || []).length + ' 篇\n· 灵感：' + (insp || []).length + ' 条\n\n需要我按「做了什么 / 收获 / 下一步」展开吗？';
+  }
+  if (/健康|运动|健身|sleep|睡眠|作息|拉伸/.test(p)) {
+    return '健康小建议：保持 25 分钟专注 + 5 分钟起身活动，久坐超过 ' + (S.settings.sitThreshold || 50) + ' 分钟记得拉伸；规律作息有助于深度思考。要不要我帮你排一个今日运动计划？';
+  }
+  return '我是你的锦程 AI 助手  离线模式下我基于你的本地数据作答。你可以让我：\n· 查找 / 整理资料与文献\n· 梳理今日待办\n· 起草文献综述提纲或周报\n· 给健康与作息建议\n\n你现在有 ' + undone.length + ' 条待办、' + (R.papers || []).length + ' 篇文献、' + (insp || []).length + ' 条灵感。想从哪开始？';
+}
+async function askAI(prompt, sources, image) {
+  sources = sources || [];
+  const R = S.research, st = S.settings;
+  const ctx = '用户数据摘要：待办' + ((S.todos || []).filter(t => !t.done).length) + ' 条，文献' + (R.papers || []).length + ' 篇，灵感' + (S.inspiration.items || []).length + ' 条，书目' + (S.reading.books || []).length + ' 本，活跃' + (S.activeDays || []).length + ' 天。';
+  const webCtx = sources.length ? ('\n\n用户已开启联网搜索，以下是为你检索到的真实资料，请在回答中引用并标注来源链接：\n' + sources.map((s, i) => (i + 1) + '. ' + s.title + (s.url ? ' — ' + s.url : '') + (s.snippet ? '\n   ' + s.snippet : '')).join('\n')) : '';
+  if (USE_API && st.ai && st.ai.api) {
+    try {
+      const sys = '你是「锦程」个人成长工作台的 AI 助手，语气亲切、简洁、实用。' + ctx + (webCtx ? '\n用户开启了联网搜索，请基于检索到的资料作答，并给出可点击的来源链接。' : '') + (image ? '\n用户上传了图片，请结合图片内容作答。' : '');
+      const textPart = prompt + (webCtx ? '\n\n（附检索资料）\n' + webCtx : '');
+      const userContent = image
+        ? [{ type: 'text', text: textPart || '请识别这张图片并回答我的问题。' }, { type: 'image_url', image_url: { url: image } }]
+        : textPart;
+      const r = await fetch(st.ai.api, {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, st.ai.key ? { 'Authorization': 'Bearer ' + st.ai.key } : {}),
+        body: JSON.stringify({ model: st.ai.model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: userContent }] })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const ans = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || j.reply || j.content || '';
+        if (ans) return ans;
+      }
+    } catch (e) { /* 联网失败，回退本地 */ }
+  }
+  return aiLocal(prompt, sources, image);
+}
+
+/* ===================== 小树苗显隐 ===================== */
+function toggleSprout() {
+  const s = $('#sprout'); s.classList.toggle('hidden');
+  localStorage.setItem('sprout_hidden', s.classList.contains('hidden') ? '1' : '0');
+}
+function tryAutoLoc() { /* 灵感快记已取消「地点」字段，无需自动定位 */ }
+/* ===================== 初始化与事件装配 ===================== */
+function monthlyResetIfNeeded() {
+  const m = today().slice(0, 7);
+  if (S._month !== m) {
+    S._month = m;
+    S.rewards.edits = 0;
+    S.rewardPool.tickets = 3;
+    save();
+  }
+}
+
+function boot() {
+  monthlyResetIfNeeded();
+  applyTheme();
+  renderProfile();
+  renderNav();
+  renderTop();
+  renderDetail();
+  attachSprout();
+  bindToggle();
+  maybeAutoCapture();
+  setInterval(() => { if (document.visibilityState !== 'hidden') maybeAutoCapture(); }, 5 * 60 * 1000);
+  if (localStorage.getItem('sprout_hidden') === '1') $('#sprout').classList.add('hidden');
+  $('#scrim').addEventListener('click', () => $('#app').classList.add('collapsed'));
+
+  /* 事件委托：先 data-form 走 handleForm，再 data-action 走 handleAction */
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'modalRoot') { closeModal(); return; }
+    const sp = e.target.closest('[data-search-view]');
+    if (sp) { navigateTo(sp.getAttribute('data-search-view'), sp.getAttribute('data-search-id')); return; }
+    const fBtn = e.target.closest('[data-form]');
+    if (fBtn) { handleForm(fBtn); return; }
+    const aBtn = e.target.closest('[data-action]');
+    if (aBtn) { handleAction(aBtn.getAttribute('data-action'), aBtn, e); return; }
+    if (!e.target.closest('.tb-search')) closeSearch();
+  });
+
+  /* 搜索输入 + 文件导入（事件委托） */
+  document.addEventListener('input', (e) => { if (e.target && e.target.id === 'searchInput') renderSearch(e.target.value); });
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'importFile' && e.target.files && e.target.files[0]) importJsonFile(e.target.files[0]);
+    if (e.target && e.target.id === 'aiPhotoFile' && e.target.files && e.target.files[0]) {
+      const f = e.target.files[0];
+      const rd = new FileReader();
+      rd.onload = (ev) => { compressImage(ev.target.result, 800, (d) => { AI_PHOTO = d; render(); }); };
+      rd.readAsDataURL(f);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeModal(); closeSearch(); }
+    else if (e.target && e.target.id === 'aiInput' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAction('aiSend', e.target, e); }
+  });
+
+  sproutSay(pick(DIALOGS.welcome)());
+}
+
+/* 启动 */
+loadData().then(d => { S = d; boot(); }).catch(err => {
+  console.error('加载失败，使用默认数据', err);
+  S = DEFAULT_STATE(); boot();
+});
+
+})();
+</script>
+</body>
+</html>
