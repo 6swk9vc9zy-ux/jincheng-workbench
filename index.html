@@ -574,6 +574,7 @@ function DEFAULT_STATE() {
       dark: false, color: 'green', density: 'comfort', notifications: true, sound: true,
       sitThreshold: 50, focusDuration: 25, remindLead: 10,
       gh: { user: '6swk9vc9zy-ux', repo: 'jincheng-sync', token: '', path: 'backup/jincheng-backup.json' },
+      rewards: { daily: 15, weekly: 30, monthly: 50, focus: 5, checkin: 5 },
       newsApi: '', ai: { api: '', key: '', model: '' }, searchApi: '', aiWeb: false
     },
     timeBlocks: [], todos: [], studyPlans: [],
@@ -1031,7 +1032,8 @@ function renderOverview() {
 
 /* ===================== 复盘 ===================== */
 function renderReview() {
-  const kinds = [['daily', '日复盘', 15], ['weekly', '周复盘', 30], ['monthly', '月复盘', 50]];
+  const rwcfg = S.settings.rewards || {};
+  const kinds = [['daily', '日复盘', rwcfg.daily != null ? rwcfg.daily : 15], ['weekly', '周复盘', rwcfg.weekly != null ? rwcfg.weekly : 30], ['monthly', '月复盘', rwcfg.monthly != null ? rwcfg.monthly : 50]];
   const tab = TAB.review || 'daily';
   const arr = S.reviews[tab] || [];
   const meta = kinds.find(k => k[0] === tab);
@@ -1040,7 +1042,7 @@ function renderReview() {
       + '<div class="field"><label>思考</label><textarea id="rv_b" rows="2" placeholder="有什么想法..."></textarea></div>'
       + '<div class="field"><label>计划</label><textarea id="rv_c" rows="2" placeholder="有什么打算..."></textarea></div>'
     : '<div class="field"><label>' + (tab === 'weekly' ? '本周思考' : '月底大复盘') + '</label><textarea id="rv_big" rows="6" placeholder="' + (tab === 'weekly' ? '本周有什么新鲜事，有什么想法嘞 ...' : '又度过美好的一个月，那么问题来了，有啥想唠的、吐槽的，开唠...') + '"></textarea></div>';
-  return `<div class="view-head"><div><h1>复盘</h1><div class="sub">日/周/月三类复盘，分别 +15 / +30 / +50 薯条</div></div></div>
+  return `<div class="view-head"><div><h1>复盘</h1><div class="sub">日/周/月三类复盘，分别 +${kinds[0][2]} / +${kinds[1][2]} / +${kinds[2][2]} 薯条</div></div></div>
   <div class="tabs">${kinds.map(k => `<div class="tab ${tab === k[0] ? 'active' : ''}" data-action="tab:review:${k[0]}">${k[1]}（+${k[2]}）</div>`).join('')}</div>
   ${card(meta[1], 'review', `
     <div class="grid2">
@@ -1492,16 +1494,15 @@ function renderSettings() {
       <input type="file" id="importFile" accept="application/json" style="display:none">
     `)}
     ${card('奖励设置', 'rewards', `
-      <p class="tiny" style="margin:0 0 10px">当前薯条余额：<b style="color:var(--gold);font-size:16px">${p.coins}</b> 根。可手动设置或增减数量，用于弥补漏记的奖励或手动发放。</p>
-      <div class="field"><label>薯条数量（保存后覆盖当前余额）</label><input id="st_coins" type="number" value="${p.coins}" min="0"></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="btn sm" data-action="coinAdj:10">+10</button>
-        <button class="btn sm" data-action="coinAdj:50">+50</button>
-        <button class="btn sm" data-action="coinAdj:100">+100</button>
-        <button class="btn sm" data-action="coinAdj:-10">-10</button>
-        <button class="btn sm" data-action="coinAdj:-50">-50</button>
+      <p class="tiny" style="margin:0 0 10px">调整完成各类行为后获得的薯条数量，保存后即时生效。</p>
+      <div class="grid2">
+        <div class="field"><label>日复盘奖励</label><input id="st_rw_daily" type="number" value="${s.rewards && s.rewards.daily != null ? s.rewards.daily : 15}" min="0"></div>
+        <div class="field"><label>周复盘奖励</label><input id="st_rw_weekly" type="number" value="${s.rewards && s.rewards.weekly != null ? s.rewards.weekly : 30}" min="0"></div>
+        <div class="field"><label>月复盘奖励</label><input id="st_rw_monthly" type="number" value="${s.rewards && s.rewards.monthly != null ? s.rewards.monthly : 50}" min="0"></div>
+        <div class="field"><label>专注完成奖励</label><input id="st_rw_focus" type="number" value="${s.rewards && s.rewards.focus != null ? s.rewards.focus : 5}" min="0"></div>
+        <div class="field"><label>每日签到奖励</label><input id="st_rw_checkin" type="number" value="${s.rewards && s.rewards.checkin != null ? s.rewards.checkin : 5}" min="0"></div>
       </div>
-      <div class="center">${btn('保存薯条数量', 'saveCoins', 'primary')}</div>
+      <div class="center">${btn('保存奖励设置', 'saveRewards', 'primary')}</div>
     `)}
     ${card('账号安全', 'lock', `
       <p class="tiny" style="margin:0 0 10px">当前登录：<b>${esc((currentUser()||{}).name || '')}</b> · ${esc((currentUser()||{}).role === 'admin' ? '管理员' : '用户')}</p>
@@ -1756,7 +1757,8 @@ async function handleForm(fBtn) {
     const arr = S.reviews[tab] || (S.reviews[tab] = []);
     const extra = (tab === 'daily') ? { good: g('rv_a'), bad: g('rv_b'), next: g('rv_c') } : { think: g('rv_big') };
     arr.push(Object.assign({ id: uid(), date: g('rv_date'), title: g('rv_title') }, extra));
-    const bonus = tab === 'daily' ? 15 : tab === 'weekly' ? 30 : 50;
+    const rwcfg = S.settings.rewards || {};
+    const bonus = tab === 'daily' ? (rwcfg.daily != null ? rwcfg.daily : 15) : tab === 'weekly' ? (rwcfg.weekly != null ? rwcfg.weekly : 30) : (rwcfg.monthly != null ? rwcfg.monthly : 50);
     addCoins(bonus); save(); render(); toast('复盘完成 +' + bonus + ' 薯条', 'gold'); sproutSay(sproutOp('review')); return;
   }
   if (act === 'changePwd') {
@@ -2036,8 +2038,16 @@ async function handleAction(act, btn, e) {
     case 'importJson': $('#importFile').click(); break;
     case 'clearData': if (confirm('确定清空所有数据？此操作不可恢复。')) { S = DEFAULT_STATE(); save(); render(); toast('数据已清空', 'ok'); } break;
     case 'resetGrowth': if (confirm('确定清零成长值（等级/经验/薯条/连签）？')) { S.profile.level = 1; S.profile.xp = 0; S.profile.coins = 0; S.profile.streak = 0; S.profile.longestStreak = 0; save(); render(); toast('成长值已清零', 'ok'); } break;
-    case 'coinAdj': { const ci = $('#st_coins'); if (ci) { let v = Math.max(0, (Number(ci.value) || 0) + Number(p[1])); ci.value = v; toast('已调整为 ' + v + ' 根（保存后生效）', 'gold'); } break; }
-    case 'saveCoins': { const v = Math.max(0, Number($('#st_coins').value) || 0); S.profile.coins = v; save(); render(); toast('薯条已设为 ' + v + ' 根', 'ok'); break; }
+    case 'saveRewards': {
+      S.settings.rewards = {
+        daily: Math.max(0, Number($('#st_rw_daily').value) || 0),
+        weekly: Math.max(0, Number($('#st_rw_weekly').value) || 0),
+        monthly: Math.max(0, Number($('#st_rw_monthly').value) || 0),
+        focus: Math.max(0, Number($('#st_rw_focus').value) || 0),
+        checkin: Math.max(0, Number($('#st_rw_checkin').value) || 0)
+      };
+      save(); render(); toast('奖励设置已保存', 'ok'); break;
+    }
     case 'focusPreset': if (p[1] === '0') { openModal(fNum('f_min', '自定义专注时长(分钟)', S.settings.focusDuration) + foot('focusCustom'), '自定义专注'); } else { S.settings.focusDuration = Number(p[1]); resetFocus(); save(); } break;
     case 'focusStart': startFocus(); break;
     case 'focusPause': pauseFocus(); break;
@@ -2071,7 +2081,8 @@ function tickFocus() {
   if (focusRemain <= 0) {
     clearInterval(focusTimer); focusTimer = null;
     const xp = S.settings.focusDuration >= 25 ? 15 : 10;
-    addXP(xp); addCoins(5); markActiveDay(today());
+    const rwcfg = S.settings.rewards || {};
+    addXP(xp); addCoins(rwcfg.focus != null ? rwcfg.focus : 5); markActiveDay(today());
     toast('专注完成！+' + xp + ' XP', 'gold'); sproutSay(pick(DIALOGS.focusDone)());
   } else focusRemain--;
 }
@@ -2091,7 +2102,8 @@ function doCheckin() {
   S.profile.streak = (S.profile.lastCheckin === y) ? S.profile.streak + 1 : 1;
   S.profile.longestStreak = Math.max(S.profile.longestStreak, S.profile.streak);
   S.profile.lastCheckin = t;
-  addCoins(5); addXP(5); markActiveDay(t);
+  const rwcfg = S.settings.rewards || {};
+  addCoins(rwcfg.checkin != null ? rwcfg.checkin : 5); addXP(5); markActiveDay(t);
   save(); render();
   toast(dialog('checkin'), 'gold'); sproutSay(dialog('checkinStreak', S.profile.streak));
 }
