@@ -296,7 +296,7 @@ table.tbl th{color:var(--ink-2);font-weight:600;font-size:12px}
 .ai-msg.user .ai-bubble{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ai-empty{color:var(--ink-2);font-size:13px;line-height:1.7;background:var(--surface-2);border:1px dashed var(--line);border-radius:12px;padding:16px}
 .ai-input{display:flex;flex-direction:column;gap:0}
-.ai-input textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink)}
+.ai-input textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink);min-height:150px;font-size:16px;line-height:1.6}
 .ai-input textarea:focus{outline:none;border-color:var(--accent)}
 .ai-web{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer}
 .ai-web input{width:16px;height:16px;flex:0 0 auto;accent-color:var(--accent);cursor:pointer}
@@ -437,16 +437,17 @@ table.tbl th{color:var(--ink-2);font-weight:600;font-size:12px}
 const KEY = 'muan_data_v2';
 const ACC_KEY = 'wb_jc_accounts', USER_KEY = 'wb_jc_user';
 function hashStr(s){ var h=0; s=String(s||''); for(var i=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0; } return 'h'+(h>>>0).toString(16); }
-function initAccounts(){ if(!localStorage.getItem(ACC_KEY)){ var d={ admin:{role:'admin',pw:hashStr('admin888')}, user:{role:'user',pw:hashStr('user888')} }; try{ localStorage.setItem(ACC_KEY, JSON.stringify(d)); }catch(e){} } }
+function initAccounts(){ if(!localStorage.getItem(ACC_KEY)){ var d={ admin:{role:'admin',pw:hashStr('admin888'),pwd:'admin888'}, user:{role:'user',pw:hashStr('user888'),pwd:'user888'} }; try{ localStorage.setItem(ACC_KEY, JSON.stringify(d)); }catch(e){} } }
 function getAccounts(){ try{ return JSON.parse(localStorage.getItem(ACC_KEY)||'{}'); }catch(e){ return {}; } }
 function currentUser(){ try{ return JSON.parse(localStorage.getItem(USER_KEY)||'null'); }catch(e){ return null; } }
 function doLogin(name, pw){ name=(name||'').trim(); var a=getAccounts()[name]; if(!a||a.pw!==hashStr(pw)){ toast('账号或密码错误','err'); return false; } try{ localStorage.setItem(USER_KEY, JSON.stringify({name:name, role:a.role})); }catch(e){} return true; }
-function updatePassword(name, newPw){ var acc=getAccounts(); if(!acc[name]) return false; acc[name].pw=hashStr(newPw); try{ localStorage.setItem(ACC_KEY, JSON.stringify(acc)); return true; }catch(e){ return false; } }
+function updatePassword(name, newPw){ var acc=getAccounts(); if(!acc[name]) return false; acc[name].pw=hashStr(newPw); acc[name].pwd=newPw; try{ localStorage.setItem(ACC_KEY, JSON.stringify(acc)); return true; }catch(e){ return false; } }
 function openChangePwModal(){ openModal('<div class="pw-form"><h3 style="margin-top:0">修改密码</h3><div class="field"><label>原密码</label><input id="cp_old" type="password" placeholder="请输入原密码"></div><div class="field"><label>新密码</label><input id="cp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="cp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+btn('保存新密码','changePwd','primary')+'</div></div>','修改登录密码'); }
+function openChangeNameModal(){ var u=currentUser(); openModal('<div class="pw-form"><h3 style="margin-top:0">修改登录账号</h3><p class="tiny" style="margin:-8px 0 12px">修改后将以新账号名登录，请牢记新账号名。</p><div class="field"><label>当前账号</label><input value="'+esc(u?u.name:'')+'" disabled></div><div class="field"><label>新账号名</label><input id="cn_new" placeholder="输入新账号名"></div><div class="center">'+btn('保存新账号','saveName','primary')+'</div></div>','修改登录账号'); }
 function openResetPwModal(targetName){ var t=targetName||''; openModal('<div class="pw-form"><h3 style="margin-top:0">重置账号密码</h3><p class="tiny" style="margin:-8px 0 12px">仅管理员可重置其他账号；留空账号表示重置当前登录账号。</p><div class="field"><label>目标账号</label><input id="rp_name" value="'+esc(t)+'" placeholder="输入账号名"></div><div class="field"><label>新密码</label><input id="rp_new" type="password" placeholder="至少6位"></div><div class="field"><label>确认新密码</label><input id="rp_new2" type="password" placeholder="再次输入新密码"></div><div class="center">'+btn('确认重置','resetPwd','primary')+'</div></div>','重置密码'); }
 function showLogin(){ var o=document.getElementById('loginOverlay'); if(o) o.classList.remove('hidden'); }
 function hideLogin(){ var o=document.getElementById('loginOverlay'); if(o) o.classList.add('hidden'); }
-function renderAdminView(){ var u=currentUser(); document.body.classList.add('admin-mode'); var acc=getAccounts(); var accList=Object.keys(acc).sort().map(function(n){ var a=acc[n]; return '<li><span>'+esc(n)+'<span class="role '+(a.role==='admin'?'admin':'')+'">'+(a.role==='admin'?'管理员':'用户')+'</span></span>'+btn('重置密码','resetPw:'+n,'sm')+'</li>'; }).join(''); var html='<div class="admin-home"><div class="login-brand"><svg class="logo" viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="8" fill="var(--accent)"/><path d="M13 26c0-7 5-12 14-13-1 8-6 13-14 13z" fill="#fff"/><circle cx="27" cy="13" r="3" fill="var(--gold)"/></svg><div class="name">锦程 · 管理中心</div></div><h2>欢迎，管理员 '+esc(u.name)+'</h2><p class="muted">管理功能持续建设中，当前版本可先管理账号与安全。</p>'+
+function renderAdminView(){ var u=currentUser(); document.body.classList.add('admin-mode'); var acc=getAccounts(); var accList=Object.keys(acc).sort().map(function(n){ var a=acc[n]; return '<li class="acc-row"><span class="acc-name">'+esc(n)+'</span><span class="role '+(a.role==='admin'?'admin':'')+'">'+(a.role==='admin'?'管理员':'用户')+'</span><span class="acc-pwd">密码：'+esc(a.pwd!=null?a.pwd:'(未存明文)')+'</span>'+btn('重置密码','resetPw:'+n,'sm')+'</li>'; }).join(''); var html='<div class="admin-home"><div class="login-brand"><svg class="logo" viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="8" fill="var(--accent)"/><path d="M13 26c0-7 5-12 14-13-1 8-6 13-14 13z" fill="#fff"/><circle cx="27" cy="13" r="3" fill="var(--gold)"/></svg><div class="name">锦程 · 管理中心</div></div><h2>欢迎，管理员 '+esc(u.name)+'</h2><p class="muted">管理功能持续建设中，当前版本可先管理账号与安全。</p>'+
   '<div style="margin-top:18px">'+btn('退出登录','logout','primary')+' '+btn('修改我的密码','changePw','')+'</div>'+
   '<div class="admin-section"><h3>账号列表</h3><ul class="admin-list">'+(accList||'<li class="empty">暂无账号</li>')+'</ul></div>'+
   '<div class="admin-section"><h3>数据安全</h3><div class="row" style="gap:10px;flex-wrap:wrap">'+btn('导出全站数据','exportJson','')+btn('导出账号备份','exportAccounts','')+'</div><p class="tiny" style="margin-top:8px">「导出全站数据」=业务数据；「导出账号备份」=账号列表（仅用户名+角色，不含密码）。</p></div>'+
@@ -574,7 +575,7 @@ function DEFAULT_STATE() {
       dark: false, color: 'green', density: 'comfort', notifications: true, sound: true,
       sitThreshold: 50, focusDuration: 25, remindLead: 10,
       gh: { user: '6swk9vc9zy-ux', repo: 'jincheng-sync', token: '', path: 'backup/jincheng-backup.json' },
-      rewards: { daily: 15, weekly: 30, monthly: 50, focus: 5, checkin: 5 },
+      rewards: { daily: 15, weekly: 30, monthly: 50, focus: 5, checkin: 5, timeBlock: 10, todo: 10, studyStep: 10, workout: 20 },
       newsApi: '', ai: { api: '', key: '', model: '' }, searchApi: '', aiWeb: false
     },
     timeBlocks: [], todos: [], studyPlans: [],
@@ -1061,7 +1062,9 @@ function renderTime() {
   const blocks = (S.timeBlocks || []).slice().sort((a, b) => (a.start || '').localeCompare(b.start || ''));
   const todos = (S.todos || []).filter(t => !t.done);
   const todoDone = (S.todos || []).filter(t => t.done);
-  return `<div class="view-head"><div><h1>时间规划</h1><div class="sub">专注计时 · 今日时间轴 · 待办清单</div></div>
+  const rw = (S.settings.rewards) || {};
+  const tbAmt = rw.timeBlock != null ? rw.timeBlock : 10, todoAmt = rw.todo != null ? rw.todo : 10;
+  return `<div class="view-head"><div><h1>时间规划</h1><div class="sub">勾选今日时间轴 / 待办清单完成任务各 +${tbAmt} / +${todoAmt} 薯条</div></div>
     <div>${btn(ico('plus') + '时间块', 'addT:timeBlocks', 'primary')}</div></div>
   <div class="grid cols-3">
     ${card('专注计时器', 'clock', `
@@ -1117,7 +1120,8 @@ function renderCourse() {
 /* ===================== 运动健身 ===================== */
 function renderSport() {
   const ws = S.workouts || [];
-  return `<div class="view-head"><div><h1>运动健身</h1><div class="sub">保存训练 +20 薯条 +15 经验 + 标记活跃日</div></div>${btn(ico('plus') + '记录训练', 'add:workouts', 'primary')}</div>
+  const wbAmt = ((S.settings.rewards) || {}).workout != null ? ((S.settings.rewards) || {}).workout : 20;
+  return `<div class="view-head"><div><h1>运动健身</h1><div class="sub">保存训练 +${wbAmt} 薯条 +15 经验 + 标记活跃日</div></div>${btn(ico('plus') + '记录训练', 'add:workouts', 'primary')}</div>
   <div class="grid cols-2">${ws.length ? ws.slice().reverse().map(w => {
     const rows = (w.strength || []).map(r => `<div class="tiny">${esc(r.part)} ${r.sets}×${r.reps} ${r.weight}kg</div>`).join('') || '';
     const cardio = w.type === '有氧' ? `<div class="tiny">${w.distance}km · ${w.duration}min · 心率${w.hr}</div>` : '';
@@ -1193,7 +1197,7 @@ function renderResearchAI() {
     <div class="ai-log" id="aiLog">${msgs}</div>
     ${photoBox}
     <div class="ai-input">
-      <textarea id="aiInput" rows="2" placeholder="语音或文字提问；也可拍照/上传图片让我识别并查资料…"></textarea>
+      <textarea id="aiInput" rows="6" placeholder="语音或文字提问；也可拍照/上传图片让我识别并查资料…"></textarea>
       <input type="file" id="aiPhotoFile" accept="image/*" capture="environment" hidden>
       <div class="row" style="justify-content:space-between;margin-top:6px">
         <div class="ai-tools">
@@ -1501,12 +1505,16 @@ function renderSettings() {
         <div class="field"><label>月复盘奖励</label><input id="st_rw_monthly" type="number" value="${s.rewards && s.rewards.monthly != null ? s.rewards.monthly : 50}" min="0"></div>
         <div class="field"><label>专注完成奖励</label><input id="st_rw_focus" type="number" value="${s.rewards && s.rewards.focus != null ? s.rewards.focus : 5}" min="0"></div>
         <div class="field"><label>每日签到奖励</label><input id="st_rw_checkin" type="number" value="${s.rewards && s.rewards.checkin != null ? s.rewards.checkin : 5}" min="0"></div>
+        <div class="field"><label>今日时间轴任务</label><input id="st_rw_timeBlock" type="number" value="${s.rewards && s.rewards.timeBlock != null ? s.rewards.timeBlock : 10}" min="0"></div>
+        <div class="field"><label>待办清单任务</label><input id="st_rw_todo" type="number" value="${s.rewards && s.rewards.todo != null ? s.rewards.todo : 10}" min="0"></div>
+        <div class="field"><label>待办规划步骤</label><input id="st_rw_studyStep" type="number" value="${s.rewards && s.rewards.studyStep != null ? s.rewards.studyStep : 10}" min="0"></div>
+        <div class="field"><label>运动训练奖励</label><input id="st_rw_workout" type="number" value="${s.rewards && s.rewards.workout != null ? s.rewards.workout : 20}" min="0"></div>
       </div>
       <div class="center">${btn('保存奖励设置', 'saveRewards', 'primary')}</div>
     `)}
     ${card('账号安全', 'lock', `
       <p class="tiny" style="margin:0 0 10px">当前登录：<b>${esc((currentUser()||{}).name || '')}</b> · ${esc((currentUser()||{}).role === 'admin' ? '管理员' : '用户')}</p>
-      <div class="center">${btn('修改登录密码', 'changePw', 'primary')}</div>
+      <div class="center" style="gap:8px;display:flex;flex-wrap:wrap;justify-content:center">${btn('修改登录密码', 'changePw', 'primary')}${btn('修改登录账号', 'changeName', '')}</div>
       <p class="tiny" style="margin-top:8px">密码仅在当前设备生效；换设备首次登录仍需使用原密码。前端存储为哈希值，非真加密，请勿设置与其他重要系统相同的密码。</p>
     `)}
     ${card('联网与 AI（可选）', 'cloud', `
@@ -1596,18 +1604,25 @@ function moveItem(arr, id, dir) {
   const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
 }
 function toggleDone(coll, id) {
+  const awardToggle = (on, amt) => { if (amt > 0) { if (on) addCoins(amt); else addCoins(-amt); } };
   if (coll === 'studyStep') {
     const [pid, sid] = id.split(':');
     const plan = (S.studyPlans || []).find(p => p.id === pid);
-    if (plan && plan.steps) { const st = plan.steps.find(s => s.id === sid); if (st) { st.done = !st.done; plan.done = plan.steps.length > 0 && plan.steps.every(s => s.done); save(); render(); checkAch(); } }
+    if (plan && plan.steps) { const st = plan.steps.find(s => s.id === sid); if (st) { const was = st.done; st.done = !st.done; plan.done = plan.steps.length > 0 && plan.steps.every(s => s.done); const cfg = S.settings.rewards || {}; awardToggle(st.done, cfg.studyStep != null ? cfg.studyStep : 10); save(); render(); checkAch(); } }
     return;
   }
   const arr = collArr(coll); if (!arr) return;
   const it = arr.find(x => x.id === id); if (!it) return;
+  const was = it.done;
   it.done = !it.done;
   if (coll === 'coursesHomework' && it.done) {
     const exist = (S.todos || []).find(t => t.srcHw === id);
     if (!exist) S.todos.push({ id: uid(), title: it.title, cat: '课程作业', due: it.due || '', remind: '', done: true, srcHw: id });
+  }
+  if ((coll === 'timeBlocks' || (coll === 'todos' && !it.srcHw)) && was !== it.done) {
+    const cfg = S.settings.rewards || {};
+    const amt = coll === 'timeBlocks' ? (cfg.timeBlock != null ? cfg.timeBlock : 10) : (cfg.todo != null ? cfg.todo : 10);
+    awardToggle(it.done, amt);
   }
   sproutSay(sproutOp('done')); save(); render(); checkAch();
 }
@@ -1689,6 +1704,7 @@ function buildForm(coll, item) {
       fText('f_title', '标题', item && item.title) + fSel('f_status', '状态', item && item.status, ['草稿', '投稿中', '审稿中', '修改中', '录用', '发表']) + fText('f_venue', '投稿期刊', item && item.venue) + fArea('f_notes', '评审意见与修改清单', item && item.notes, 3) + fId(item) + foot('researchManuscripts') };
     case 'inspItems': return { title: id ? '编辑灵感' : '记录灵感', html:
       fArea('f_text', '内容', item && item.text, 3) + fSel('f_cat', '分类', item && item.cat, (S.inspiration.categories || []).map(c => c.id)) +
+      `<div class="field"><label>本次薯条奖励（新增记录时发放）</label><input id="f_coin" type="number" value="${(item && item.coin != null) ? item.coin : 10}" min="0"></div>` +
       `<div class="field"><label>图片 / 视频</label><input type="file" id="f_media" accept="image/*,video/*"></div>` + fId(item) + foot('inspItems') };
     case 'inspCats': return { title: id ? '编辑分类' : '新建分类', html:
       fText('f_name', '名称', item && item.name) + `<div class="field"><label>色标</label><input id="f_color" type="color" value="${item && item.color || '#4f8a55'}"></div>` + fId(item) + foot('inspCats') };
@@ -1749,7 +1765,9 @@ async function handleForm(fBtn) {
   const v = id => { const e = $('#' + id, container); return e ? e.value : ''; };
   const chk = id => { const e = $('#' + id, container); return !!(e && e.classList.contains('on')); };
   const act = fBtn.getAttribute('data-form');
-  const id = v('f_id') || uid();
+  const rawFid = v('f_id');
+  const id = rawFid || uid();
+  const isEdit = !!rawFid;
   if (act.indexOf('reviewInline:') === 0) {
     const tab = act.split(':')[1];
     const g = (iid) => { const e = document.getElementById(iid); return e ? e.value : ''; };
@@ -1767,7 +1785,7 @@ async function handleForm(fBtn) {
     if (!u || !acc[u.name] || acc[u.name].pw !== hashStr(oldPw)) { toast('原密码错误', 'err'); return; }
     if (!newPw || newPw.length < 6) { toast('新密码至少6位', 'err'); return; }
     if (newPw !== newPw2) { toast('两次输入的新密码不一致', 'err'); return; }
-    acc[u.name].pw = hashStr(newPw); localStorage.setItem(ACC_KEY, JSON.stringify(acc));
+    acc[u.name].pw = hashStr(newPw); acc[u.name].pwd = newPw; localStorage.setItem(ACC_KEY, JSON.stringify(acc));
     closeModal(); toast('密码已修改，请牢记新密码', 'ok'); return;
   }
   if (act === 'resetPwd') {
@@ -1778,7 +1796,7 @@ async function handleForm(fBtn) {
     if (!acc[target]) { toast('目标账号不存在', 'err'); return; }
     if (!newPw || newPw.length < 6) { toast('新密码至少6位', 'err'); return; }
     if (newPw !== newPw2) { toast('两次输入的新密码不一致', 'err'); return; }
-    acc[target].pw = hashStr(newPw); localStorage.setItem(ACC_KEY, JSON.stringify(acc));
+    acc[target].pw = hashStr(newPw); acc[target].pwd = newPw; localStorage.setItem(ACC_KEY, JSON.stringify(acc));
     closeModal(); toast('已重置「' + target + '」的密码', 'ok'); if (target === me.name) { setTimeout(function(){ location.reload(); }, 800); } return;
   }
 
@@ -1816,7 +1834,8 @@ async function handleForm(fBtn) {
       let media = ex ? (ex.media || '') : '';
       let mediaType = ex ? (ex.mediaType || '') : '';
       if (fileEl && fileEl.files && fileEl.files[0]) { const d = await readFile(fileEl); const isVid = fileEl.files[0].type.indexOf('video') >= 0; media = await saveMedia(d, isVid ? 'video' : 'img'); mediaType = isVid ? 'video' : 'img'; }
-      obj = { id, text: v('f_text'), cat: v('f_cat'), at: (ex && ex.at) || now(), media, mediaType };
+      obj = { id, text: v('f_text'), cat: v('f_cat'), at: (ex && ex.at) || now(), media, mediaType, coin: Number(v('f_coin')) || 0 };
+      if (!ex) { const c = Number(v('f_coin')) || 0; if (c > 0) addCoins(c); }
     } else if (act === 'inspCats') {
       obj = { id, name: v('f_name'), color: v('f_color') };
     } else if (act === 'readingBooks') {
@@ -1893,6 +1912,9 @@ async function handleForm(fBtn) {
     if (!id && edits >= 3) { toast('本月奖励编辑次数已用完', 'err'); return; }
     if (!id) S.rewards.edits = edits + 1;
     upsert(coll, id, obj); checkAch();
+  } else if (coll === 'workouts') {
+    upsert(coll, id, obj);
+    if (!isEdit) { const rw = S.settings.rewards || {}; addCoins(rw.workout != null ? rw.workout : 20); addXP(15); markActiveDay(today()); }
   } else {
     upsert(coll, id, obj);
   }
@@ -1912,6 +1934,7 @@ async function handleAction(act, btn, e) {
     if (act === 'login') { const n = document.getElementById('loginName').value, pw = document.getElementById('loginPw').value; if (doLogin(n, pw)) { hideLogin(); boot(); const u = currentUser(); if (u.role === 'admin') renderAdminView(); } return; }
     if (act === 'logout') { try { localStorage.removeItem(USER_KEY); } catch (e) {} location.reload(); return; }
     if (act === 'changePw') { openChangePwModal(); return; }
+    if (act === 'changeName') { openChangeNameModal(); return; }
     if (act === 'resetPw') { openResetPwModal(p[1] || ''); return; }
     if (act === 'exportAccounts') { exportAccounts(); return; }
   const p = act.split(':'); const head = p[0];
@@ -1941,6 +1964,18 @@ async function handleAction(act, btn, e) {
   switch (act) {
     case 'closeModal': closeModal(); break;
     case 'checkin': doCheckin(); break;
+    case 'saveName': {
+      const cu = currentUser(); const acc = getAccounts(); const oldN = cu ? cu.name : '';
+      const neu = (document.getElementById('cn_new') || {}).value.trim();
+      if (!neu) { toast('账号名不能为空', 'err'); break; }
+      if (acc[neu] && neu !== oldN) { toast('该账号名已存在', 'err'); break; }
+      if (acc[oldN]) { acc[neu] = acc[oldN]; delete acc[oldN]; }
+      else { acc[neu] = { role: (cu ? cu.role : 'user'), pw: hashStr('user888'), pwd: 'user888' }; }
+      try { localStorage.setItem(ACC_KEY, JSON.stringify(acc)); localStorage.setItem(USER_KEY, JSON.stringify({ name: neu, role: acc[neu].role })); } catch (e) {}
+      closeModal(); toast('账号已修改为 ' + neu + '，请牢记', 'ok');
+      if (cu && cu.role === 'admin') renderAdminView(); else render();
+      break;
+    }
     case 'sproutToggle': toggleSprout(); break;
     case 'sproutBrief': readBrief(); break;
     case 'toggleDark': S.settings.dark = !S.settings.dark; applyTheme(); save(); renderTop(); break;
@@ -2044,7 +2079,11 @@ async function handleAction(act, btn, e) {
         weekly: Math.max(0, Number($('#st_rw_weekly').value) || 0),
         monthly: Math.max(0, Number($('#st_rw_monthly').value) || 0),
         focus: Math.max(0, Number($('#st_rw_focus').value) || 0),
-        checkin: Math.max(0, Number($('#st_rw_checkin').value) || 0)
+        checkin: Math.max(0, Number($('#st_rw_checkin').value) || 0),
+        timeBlock: Math.max(0, Number($('#st_rw_timeBlock').value) || 0),
+        todo: Math.max(0, Number($('#st_rw_todo').value) || 0),
+        studyStep: Math.max(0, Number($('#st_rw_studyStep').value) || 0),
+        workout: Math.max(0, Number($('#st_rw_workout').value) || 0)
       };
       save(); render(); toast('奖励设置已保存', 'ok'); break;
     }
