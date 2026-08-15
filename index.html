@@ -1000,7 +1000,7 @@ function renderToday() {
 
 function renderDetail() {
   const fn = { overview: renderOverview, review: renderReview, time: renderTime, study: renderStudy, course: renderCourse, sport: renderSport, research: renderResearch, ai: renderResearchAI, inspiration: renderInspiration, reading: renderReading, news: renderNews, finance: renderFinance, rewards: renderRewards, settings: renderSettings, achievements: renderAchievements }[CURRENT];
-  const d = $('#detail'); const td0 = (CURRENT === 'overview') ? renderToday() : ''; if (fn) d.innerHTML = td0 + fn(); else d.innerHTML = td0 + emptyHint('视图缺失');
+  const d = $('#detail'); if (fn) d.innerHTML = fn(); else d.innerHTML = emptyHint('视图缺失');
 }
 
 /* ===================== 概览 ===================== */
@@ -1019,6 +1019,7 @@ function renderOverview() {
   return `
   <div class="view-head"><div><h1>概览</h1><div class="sub">${esc(p.motto)}</div></div>
     <div>${btn(ico('sprout') + ' 让小树苗读简报', 'sproutBrief', 'primary')}${btn(ico('calendar') + ' 签到打卡', 'checkin', 'gold')}</div></div>
+  ${renderToday()}
   <div class="grid cols-2">
     ${card('收支速览', 'finance', `<div class="stat-grid"><div class="stat"><b class="c-inc">${money(inc)}</b><span>收入</span></div><div class="stat"><b class="c-exp">${money(exp)}</b><span>支出</span></div><div class="stat"><b>${money(inc - exp)}</b><span>结余</span></div><div class="stat"><b>${S.profile.coins}</b><span>薯条</span></div></div>`, '<span class="right">' + addBtn('记一笔', 'financeTx') + '</span>')}
     ${card('科研速览', 'research', `<div class="stat-grid"><div class="stat"><b>${papers}</b><span>文献</span></div><div class="stat"><b>${(S.research.tasks || []).length}</b><span>任务</span></div><div class="stat"><b>${(S.research.milestones || []).filter(m => m.done).length}/${(S.research.milestones || []).length}</b><span>里程碑</span></div><div class="stat"><b>${(S.research.manuscripts || []).length}</b><span>稿件</span></div></div>`, '<span class="right">' + btn('进入科研', 'go:research', 'sm') + '</span>')}
