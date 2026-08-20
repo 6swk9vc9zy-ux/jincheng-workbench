@@ -1563,7 +1563,7 @@ function renderSettings() {
     ${card('联网与 AI（可选）', 'cloud', `
       <div class="field"><label>资料搜索接口（留空=默认维基百科，无需 Key、支持 CORS）</label><input id="st_searchapi" value="${esc(S.settings.searchApi || '')}" placeholder="https://zh.wikipedia.org/w/api.php 或 你的搜索服务"></div>
       <div class="field"><label>时事热点抓取接口（POST，返回 [{tab,title,summary,source}]）</label><input id="st_newsapi" value="${esc(S.settings.newsApi || '')}" placeholder="https://your-host/api/news"></div>
-      ${(function(){var a=S.settings.ai||{};var p=a.provider||'openai';var sel='<div class="field"><label>AI 接口类型</label><select id="st_aiprovider"><option value="openai"'+(p==='openai'?' selected':'')+'>OpenAI 兼容（/chat/completions）</option><option value="gemini"'+(p==='gemini'?' selected':'')+'>Google Gemini（免费档）</option></select></div>';if(p==='gemini'){return sel+'<div class="tiny" style="margin:0 0 8px">Gemini 接口地址固定，只需填 Key 与模型名（默认 gemini-2.0-flash，免费档）。</div><div class="grid2"><div class="field"><label>API Key（Google AI Studio）</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="AIza..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||"")+'" placeholder="gemini-2.0-flash"></div></div>';}return sel+'<div class="field"><label>AI 大模型接口（OpenAI 兼容 /chat/completions）</label><input id="st_aiapi" value="'+esc(a.api||"")+'" placeholder="https://api.openai.com/v1/chat/completions"></div><div class="grid2"><div class="field"><label>API Key</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="sk-..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||"")+'" placeholder="gpt-4o-mini"></div></div>';})()}
+      ${(function(){var a=S.settings.ai||{};var p=a.provider||'openai';var sel='<div class="field"><label>AI 接口类型</label><select id="st_aiprovider"><option value="openai"'+(p==='openai'?' selected':'')+'>OpenAI 兼容（/chat/completions）</option><option value="gemini"'+(p==='gemini'?' selected':'')+'>Google Gemini（免费档）</option></select></div>';if(p==='gemini'){return sel+'<div class="tiny" style="margin:0 0 8px">Gemini 接口地址固定，只需填 Key 与模型名（默认 gemini-2.0-flash，免费档）。</div><div class="grid2"><div class="field"><label>API Key（Google AI Studio）</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="AIza..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||"")+'" placeholder="gemini-2.0-flash"></div></div>';}return sel+'<div class="field"><label>AI 大模型接口（OpenAI 兼容 /chat/completions）</label><input id="st_aiapi" value="'+esc(a.api||'https://api.deepseek.com/v1/chat/completions')+'" placeholder="https://api.deepseek.com/v1/chat/completions"></div><div class="grid2"><div class="field"><label>API Key</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="sk-..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||'deepseek-chat')+'" placeholder="deepseek-chat"></div></div>';})()}<div class="field"><label>CORS 代理前缀（选填 · 浏览器报跨域 CORS 错误时填写）</label><input id="st_aicors" value="'+esc(a.cors||'')+'" placeholder="https://corsproxy.io/?url="></div>
       <div class="row"><span class="chk ${S.news.autoCapture ? 'on' : ''}" data-action="toggleNewsAuto">${S.news.autoCapture ? ico('check') : ''}</span><span class="muted">自动捕捉热点（每 5 分钟）</span></div>
       <div class="row" style="margin-top:8px"><button class="btn primary" data-action="saveNet">保存配置</button><button class="btn" data-action="aiTest">测试 AI</button>${btn('前往 AI 助手', 'go:research', 'sm')}</div>
       <p class="tiny">留空则：热点使用本地热点池模拟实时捕捉；AI 助手基于本地数据作答。配置真实接口后，「刷新 / 捕捉」与 AI 问答将联网获取。</p>
@@ -2102,6 +2102,7 @@ async function handleAction(act, btn, e) {
       S.settings.ai.provider = $('#st_aiprovider') ? $('#st_aiprovider').value : (S.settings.ai.provider || 'openai');
       S.settings.ai.key = $('#st_aikey') ? $('#st_aikey').value : '';
       S.settings.ai.model = $('#st_aimodel') ? $('#st_aimodel').value : '';
+      S.settings.ai.cors = $('#st_aicors') ? $('#st_aicors').value.trim() : '';
       S.settings.syncFolder = $('#st_syncfolder') ? $('#st_syncfolder').value.trim() : '';
       const gh = S.settings.gh = S.settings.gh || {};
       gh.user = $('#st_ghuser') ? $('#st_ghuser').value.trim() : '';
@@ -2461,7 +2462,7 @@ async function askAI(prompt, sources, image) {
         const parts = [{ text: textPart || '请识别这张图片并回答我的问题。' }];
         if (image) { const mm = String(image).match(/^data:([^;]+);base64,(.*)$/); if (mm) parts.push({ inline_data: { mime_type: mm[1], data: mm[2] } }); }
         const gbody = { systemInstruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: parts }], generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } };
-        const r = await fetch(gurl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gbody) });
+        const r = await fetch((ai.cors ? ai.cors + encodeURIComponent(gurl) : gurl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gbody) });
         if (r.ok) {
           const j = await r.json();
           const cand = j.candidates && j.candidates[0];
@@ -2473,10 +2474,10 @@ async function askAI(prompt, sources, image) {
         const userContent = image
           ? [{ type: 'text', text: textPart || '请识别这张图片并回答我的问题。' }, { type: 'image_url', image_url: { url: image } }]
           : textPart;
-        const r = await fetch(ai.api, {
+        const r = await fetch((ai.cors ? ai.cors + encodeURIComponent(ai.api) : ai.api), {
           method: 'POST',
           headers: Object.assign({ 'Content-Type': 'application/json' }, ai.key ? { 'Authorization': 'Bearer ' + ai.key } : {}),
-          body: JSON.stringify({ model: ai.model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: userContent }] })
+          body: JSON.stringify({ model: ai.model || 'deepseek-chat', messages: [{ role: 'system', content: sys }, { role: 'user', content: userContent }] })
         });
         if (r.ok) {
           const j = await r.json();
