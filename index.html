@@ -1523,6 +1523,11 @@ function renderSettings() {
         <button class="btn" data-action="ghPull">${ico('download')}拉取备份（从 GitHub 恢复）</button>
         <button class="btn" data-action="saveNet">保存 GitHub 配置</button>
       </div>
+      <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:8px">
+        <button class="btn" data-action="exportConfig">${ico('code')}导出配置串</button>
+        <button class="btn" data-action="importConfig">${ico('import')}导入配置串</button>
+        <span class="muted tiny" style="align-self:center">跨设备免重填：本机配好 → 导出 → 新设备导入</span>
+      </div>
       <ol class="tiny" style="margin:8px 0 0;padding-left:18px;line-height:1.7">
         <li>GitHub 新建一个<b>私有</b>仓库（如 jincheng-sync）；</li>
         <li>Settings → Developer settings → Personal access tokens → 生成 <b>仅勾 repo</b> 权限的 PAT；</li>
@@ -2132,6 +2137,8 @@ async function handleAction(act, btn, e) {
     case 'exportCsv': exportCsv(); break;
     case 'clearDemo': S = DEFAULT_STATE(); save(); render(); toast('已清空示例数据', 'ok'); break;
     case 'importJson': $('#importFile').click(); break;
+    case 'exportConfig': exportConfig(); break;
+    case 'importConfig': importConfig(); break;
     case 'clearData': if (confirm('确定清空所有数据？此操作不可恢复。')) { S = DEFAULT_STATE(); save(); render(); toast('数据已清空', 'ok'); } break;
     case 'resetGrowth': if (confirm('确定清零成长值（等级/经验/薯条/连签）？')) { S.profile.level = 1; S.profile.xp = 0; S.profile.coins = 0; S.profile.streak = 0; S.profile.longestStreak = 0; save(); render(); toast('成长值已清零', 'ok'); } break;
     case 'saveRewards': {
@@ -2298,6 +2305,26 @@ function importJsonFile(file) {
   const fr = new FileReader();
   fr.onload = () => { try { const j = JSON.parse(fr.result); S = migrate(j.data || j); save(); render(); toast('导入成功，已还原', 'ok'); } catch (e) { toast('导入失败：' + e.message, 'err'); } };
   fr.readAsText(file);
+}
+/* 配置串：仅导出 / 导入 AI 与 GitHub 同步设置（不含业务数据），用于跨设备免重填。
+   凭据只暂存于本机浏览器 localStorage，绝不写入公开 HTML。 */
+function exportConfig() {
+  const cfg = { ai: S.settings.ai || {}, gh: S.settings.gh || {} };
+  const str = JSON.stringify(cfg);
+  const r = window.prompt('复制下面的配置串保存好（含 AI 与 GitHub 同步设置，不含业务数据）。\n在新设备打开本页 → 设置 → 导入配置串 → 粘贴，即可一键配置，无需重新填写：', str);
+  if (r !== null) toast('已生成配置串，请复制保存', 'ok');
+}
+function importConfig() {
+  const r = window.prompt('粘贴之前导出的配置串（包含 AI 与 GitHub 同步设置）：', '');
+  if (!r) return;
+  try {
+    const cfg = JSON.parse(r.trim());
+    if (cfg && typeof cfg === 'object') {
+      if (cfg.ai) S.settings.ai = Object.assign({}, S.settings.ai, cfg.ai);
+      if (cfg.gh) S.settings.gh = Object.assign({}, S.settings.gh, cfg.gh);
+      save(); render(); toast('配置已导入，AI 与同步已就绪', 'ok');
+    } else { toast('配置串格式错误', 'err'); }
+  } catch (e) { toast('配置串格式错误：' + e.message, 'err'); }
 }
 function readBrief() {
   const txt = ($('#briefText') || {}).textContent || '今天也要日拱一卒。';
