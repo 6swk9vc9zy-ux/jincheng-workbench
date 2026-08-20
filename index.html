@@ -599,7 +599,7 @@ function DEFAULT_STATE() {
       sitThreshold: 50, focusDuration: 25, remindLead: 10,
       gh: { user: '6swk9vc9zy-ux', repo: 'jincheng-sync', token: '', path: 'backup/jincheng-backup.json' },
       rewards: { daily: 15, weekly: 30, monthly: 50, focus: 5, checkin: 5, timeBlock: 10, todo: 10, studyStep: 10, workout: 20 },
-      newsApi: '', ai: { api: '', key: '', model: '' }, searchApi: '', aiWeb: false
+      newsApi: '', ai: { api: '', key: '', model: '', provider: 'openai' }, searchApi: '', aiWeb: false
     },
     timeBlocks: [], todos: [], studyPlans: [],
     courses: { periods: ['08:00','10:00','14:00','16:00','19:00'], grid: {}, homework: [] },
@@ -1227,11 +1227,11 @@ function renderResearchAI() {
   }).join('')
     : '<div class="ai-empty">我是你的锦程 AI 助手，支持语音输入与拍照搜索。开启「联网搜索资料」后，我会真实检索网络资料并附来源链接；配置大模型接口可让我基于资料/图片做总结与引用，离线时则基于你的本地数据作答。点击下方「联网攻略」了解免费稳定的接入方式，或试试快捷指令：</div>';
   const quick = [['帮我找资料/文献', '帮我整理现有资料与文献'], ['联网查最新研究', '帮我联网查一下最新的研究进展并给出来源'], ['识别这张图片', '请识别我上传的图片内容，并帮我查找相关资料'], ['列出今日待办', '列出我今天的待办'], ['写文献综述提纲', '帮我起草文献综述提纲'], ['生成周报草稿', '帮我写一份本周小结'], ['给点健康建议', '给我一些健康与作息建议']];
-  const cfg = S.settings.ai || {};
+  const cfg = S.settings.ai || {}; const aiOn = !!(cfg.api || (cfg.provider === 'gemini' && cfg.key));
   const provider = (S.settings.searchApi && /wikipedia|w\/api\.php/.test(S.settings.searchApi)) ? '自定义搜索' : '维基百科（默认）';
-  const photoBox = AI_PHOTO ? `<div class="ai-photo"><img src="${esc(AI_PHOTO)}" alt="待发送图片"><button class="chip" data-action="aiPhotoClear">移除图片 ✕</button></div>` + (cfg.api ? '' : '<p class="tiny" style="margin:4px 0 0">未配置 AI 接口，图片暂无法识别；可在「设置·联网与 AI」配置支持视觉的模型接口。</p>') : '';
+  const photoBox = AI_PHOTO ? `<div class="ai-photo"><img src="${esc(AI_PHOTO)}" alt="待发送图片"><button class="chip" data-action="aiPhotoClear">移除图片 ✕</button></div>` + (aiOn ? '' : '<p class="tiny" style="margin:4px 0 0">未配置 AI 接口，图片暂无法识别；可在「设置·联网与 AI」配置支持视觉的模型接口。</p>') : '';
   return `<div class="ai-wrap">
-    <div class="ai-head"><div><b>AI 助手</b> · 联动大模型</div><div class="row" style="gap:6px;align-items:center">${btn(ico('globe') + '联网攻略', 'aiGuide', 'sm')}<span class="tiny">${cfg.api ? '已配置接口 · 联网作答' : '未配置接口 · 离线本地作答'}</span></div></div>
+    <div class="ai-head"><div><b>AI 助手</b> · 联动大模型</div><div class="row" style="gap:6px;align-items:center">${btn(ico('globe') + '联网攻略', 'aiGuide', 'sm')}<span class="tiny">${aiOn ? '已配置接口 · 联网作答' : '未配置接口 · 离线本地作答'}</span></div></div>
     <label class="ai-web"><input type="checkbox" id="aiWeb" ${S.settings.aiWeb ? 'checked' : ''} data-action="aiWebToggle"> ${ico('globe')}<span>联网搜索资料</span><em class="ai-web-p">${S.settings.aiWeb ? '已开启 · ' + provider : '关闭'}</em></label>
     <div class="ai-quick">${quick.map(q => `<button class="chip" data-action="aiQuick" data-q="${esc(q[1])}">${esc(q[0])}</button>`).join('')}</div>
     <div class="ai-log" id="aiLog">${msgs}</div>
@@ -1259,7 +1259,8 @@ function openGuide() {
     + '<li>应用默认走维基百科开放接口：无需 API Key、支持 CORS、长期稳定。勾选 AI 助手里的「联网搜索资料」即可用。</li>'
     + '<li>想要更通用，可在设置填任意返回 <code>{items:[{title,url,snippet}]}</code> 的自定义搜索接口（自建或免费服务均可）。</li></ul>'
     + '<p><b>2. 大模型作答（配一个 OpenAI 兼容接口，最灵活）</b></p><ul>'
-    + '<li>填 base URL + API Key + 模型名。免费/低成本稳定可选：① 各家送的免费额度/试用；② 本机跑 <b>Ollama</b>（完全免费、离线、隐私最好，装一次环境后把接口指向本机地址）——这样「拍照识别 / 资料总结」都能跑。</li></ul>'
+    + '<li>填 base URL + API Key + 模型名。免费/低成本稳定可选：① 各家送的免费额度/试用；② 本机跑 <b>Ollama</b>（完全免费、离线、隐私最好，装一次环境后把接口指向本机地址）。</li>'
+    + '<li><b>Google Gemini 免费档</b>：在设置把「接口类型」选为 Gemini，去 Google AI Studio 免费申请一个 Key，模型填 <code>gemini-2.0-flash</code>（免费额度、支持中文与图片识别）。注意：需能访问 Google 服务，部分地区网络受限时可能连不上。</li></ul>'
     + '<p><b>3. 语音输入（免费、零配置）</b></p><ul>'
     + '<li>浏览器原生 Web Speech API，Chrome / Edge 桌面版自带中文识别，点麦克风即可，不需要任何 Key（识别走浏览器自带服务）。</li></ul>'
     + '<p><b>4. 图片识别（需要视觉模型）</b></p><ul>'
@@ -1562,12 +1563,11 @@ function renderSettings() {
     ${card('联网与 AI（可选）', 'cloud', `
       <div class="field"><label>资料搜索接口（留空=默认维基百科，无需 Key、支持 CORS）</label><input id="st_searchapi" value="${esc(S.settings.searchApi || '')}" placeholder="https://zh.wikipedia.org/w/api.php 或 你的搜索服务"></div>
       <div class="field"><label>时事热点抓取接口（POST，返回 [{tab,title,summary,source}]）</label><input id="st_newsapi" value="${esc(S.settings.newsApi || '')}" placeholder="https://your-host/api/news"></div>
-      <div class="field"><label>AI 大模型接口（OpenAI 兼容 /chat/completions）</label><input id="st_aiapi" value="${esc((S.settings.ai || {}).api || '')}" placeholder="https://api.openai.com/v1/chat/completions"></div>
-      <div class="grid2"><div class="field"><label>API Key</label><input id="st_aikey" value="${esc((S.settings.ai || {}).key || '')}" placeholder="sk-..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="${esc((S.settings.ai || {}).model || '')}" placeholder="gpt-4o-mini"></div></div>
+      ${(function(){var a=S.settings.ai||{};var p=a.provider||'openai';var sel='<div class="field"><label>AI 接口类型</label><select id="st_aiprovider"><option value="openai"'+(p==='openai'?' selected':'')+'>OpenAI 兼容（/chat/completions）</option><option value="gemini"'+(p==='gemini'?' selected':'')+'>Google Gemini（免费档）</option></select></div>';if(p==='gemini'){return sel+'<div class="tiny" style="margin:0 0 8px">Gemini 接口地址固定，只需填 Key 与模型名（默认 gemini-2.0-flash，免费档）。</div><div class="grid2"><div class="field"><label>API Key（Google AI Studio）</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="AIza..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||"")+'" placeholder="gemini-2.0-flash"></div></div>';}return sel+'<div class="field"><label>AI 大模型接口（OpenAI 兼容 /chat/completions）</label><input id="st_aiapi" value="'+esc(a.api||"")+'" placeholder="https://api.openai.com/v1/chat/completions"></div><div class="grid2"><div class="field"><label>API Key</label><input id="st_aikey" value="'+esc(a.key||"")+'" placeholder="sk-..."></div><div class="field"><label>模型名</label><input id="st_aimodel" value="'+esc(a.model||"")+'" placeholder="gpt-4o-mini"></div></div>';})()}
       <div class="row"><span class="chk ${S.news.autoCapture ? 'on' : ''}" data-action="toggleNewsAuto">${S.news.autoCapture ? ico('check') : ''}</span><span class="muted">自动捕捉热点（每 5 分钟）</span></div>
       <div class="row" style="margin-top:8px"><button class="btn primary" data-action="saveNet">保存配置</button><button class="btn" data-action="aiTest">测试 AI</button>${btn('前往 AI 助手', 'go:research', 'sm')}</div>
       <p class="tiny">留空则：热点使用本地热点池模拟实时捕捉；AI 助手基于本地数据作答。配置真实接口后，「刷新 / 捕捉」与 AI 问答将联网获取。</p>
-    `, '<span class="right"><span class="tag ' + (S.settings.newsApi || (S.settings.ai || {}).api ? 'gold' : '') + '">' + (S.settings.newsApi || (S.settings.ai || {}).api ? '已配置' : '未配置') + '</span></span>')}
+    `, '<span class="right"><span class="tag ' + (S.settings.newsApi || (S.settings.ai||{}).api || ((S.settings.ai||{}).provider==='gemini'&&(S.settings.ai||{}).key) ? 'gold' : '') + '">' + (S.settings.newsApi || (S.settings.ai||{}).api || ((S.settings.ai||{}).provider==='gemini'&&(S.settings.ai||{}).key) ? '已配置' : '未配置') + '</span></span>')}
   </div>`;
 }
 
@@ -2099,6 +2099,7 @@ async function handleAction(act, btn, e) {
       S.settings.newsApi = $('#st_newsapi') ? $('#st_newsapi').value : '';
       S.settings.ai = S.settings.ai || {};
       S.settings.ai.api = $('#st_aiapi') ? $('#st_aiapi').value : '';
+      S.settings.ai.provider = $('#st_aiprovider') ? $('#st_aiprovider').value : (S.settings.ai.provider || 'openai');
       S.settings.ai.key = $('#st_aikey') ? $('#st_aikey').value : '';
       S.settings.ai.model = $('#st_aimodel') ? $('#st_aimodel').value : '';
       S.settings.syncFolder = $('#st_syncfolder') ? $('#st_syncfolder').value.trim() : '';
@@ -2448,22 +2449,40 @@ async function askAI(prompt, sources, image) {
   const R = S.research, st = S.settings;
   const ctx = '用户数据摘要：待办' + ((S.todos || []).filter(t => !t.done).length) + ' 条，文献' + (R.papers || []).length + ' 篇，灵感' + (S.inspiration.items || []).length + ' 条，书目' + (S.reading.books || []).length + ' 本，活跃' + (S.activeDays || []).length + ' 天。';
   const webCtx = sources.length ? ('\n\n用户已开启联网搜索，以下是为你检索到的真实资料，请在回答中引用并标注来源链接：\n' + sources.map((s, i) => (i + 1) + '. ' + s.title + (s.url ? ' — ' + s.url : '') + (s.snippet ? '\n   ' + s.snippet : '')).join('\n')) : '';
-  if (USE_API && st.ai && st.ai.api) {
+  const ai = st.ai || {};
+  const aiProv = ai.provider || 'openai';
+  if (USE_API && ((aiProv === 'openai' && ai.api) || (aiProv === 'gemini' && ai.key))) {
     try {
       const sys = '你是「锦程」个人成长工作台的 AI 助手，语气亲切、简洁、实用。' + ctx + (webCtx ? '\n用户开启了联网搜索，请基于检索到的资料作答，并给出可点击的来源链接。' : '') + (image ? '\n用户上传了图片，请结合图片内容作答。' : '');
       const textPart = prompt + (webCtx ? '\n\n（附检索资料）\n' + webCtx : '');
-      const userContent = image
-        ? [{ type: 'text', text: textPart || '请识别这张图片并回答我的问题。' }, { type: 'image_url', image_url: { url: image } }]
-        : textPart;
-      const r = await fetch(st.ai.api, {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, st.ai.key ? { 'Authorization': 'Bearer ' + st.ai.key } : {}),
-        body: JSON.stringify({ model: st.ai.model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: userContent }] })
-      });
-      if (r.ok) {
-        const j = await r.json();
-        const ans = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || j.reply || j.content || '';
-        if (ans) return ans;
+      if (aiProv === 'gemini') {
+        const model = ai.model || 'gemini-2.0-flash';
+        const gurl = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(ai.key);
+        const parts = [{ text: textPart || '请识别这张图片并回答我的问题。' }];
+        if (image) { const mm = String(image).match(/^data:([^;]+);base64,(.*)$/); if (mm) parts.push({ inline_data: { mime_type: mm[1], data: mm[2] } }); }
+        const gbody = { systemInstruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: parts }], generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } };
+        const r = await fetch(gurl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gbody) });
+        if (r.ok) {
+          const j = await r.json();
+          const cand = j.candidates && j.candidates[0];
+          const txt = cand && cand.content && cand.content.parts ? cand.content.parts.map(function(p){ return p.text || ''; }).join('') : '';
+          if (txt) return txt;
+          if (j.promptFeedback && j.promptFeedback.blockReason) return '（内容被 Gemini 安全策略拦截：' + j.promptFeedback.blockReason + '）';
+        }
+      } else {
+        const userContent = image
+          ? [{ type: 'text', text: textPart || '请识别这张图片并回答我的问题。' }, { type: 'image_url', image_url: { url: image } }]
+          : textPart;
+        const r = await fetch(ai.api, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, ai.key ? { 'Authorization': 'Bearer ' + ai.key } : {}),
+          body: JSON.stringify({ model: ai.model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: userContent }] })
+        });
+        if (r.ok) {
+          const j = await r.json();
+          const ans = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || j.reply || j.content || '';
+          if (ans) return ans;
+        }
       }
     } catch (e) { /* 联网失败，回退本地 */ }
   }
