@@ -2530,6 +2530,10 @@ async function askAI(prompt, sources, image) {
           const txt = cand && cand.content && cand.content.parts ? cand.content.parts.map(function(p){ return p.text || ''; }).join('') : '';
           if (txt) return txt;
           if (j.promptFeedback && j.promptFeedback.blockReason) return '（内容被 Gemini 安全策略拦截：' + j.promptFeedback.blockReason + '）';
+          lastErr = 'Gemini 返回 ' + r.status + '：' + (j.error && j.error.message ? j.error.message : JSON.stringify(j).slice(0, 200));
+        } else {
+          let body = ''; try { body = (await r.text()).slice(0, 200); } catch (e) {}
+          lastErr = 'Gemini HTTP ' + r.status + '：' + (body || r.statusText || '空响应');
         }
       } else {
         const userContent = image
@@ -2544,6 +2548,10 @@ async function askAI(prompt, sources, image) {
           const j = await r.json();
           const ans = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || j.reply || j.content || '';
           if (ans) return ans;
+          lastErr = 'OpenAI 兼容接口返回 ' + r.status + '，但无内容字段：' + JSON.stringify(j).slice(0, 200);
+        } else {
+          let body = ''; try { body = (await r.text()).slice(0, 200); } catch (e) {}
+          lastErr = 'OpenAI 兼容接口 HTTP ' + r.status + '：' + (body || r.statusText || '空响应');
         }
       }
     } catch (e) {
