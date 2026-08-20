@@ -2405,11 +2405,12 @@ async function webSearch(q, n) {
   } catch (e) { return []; }
 }
 
-function aiLocal(prompt, sources, image) {
+function aiLocal(prompt, sources, image, lastErr, aiProv) {
   sources = sources || [];
-  const p = String(prompt || '').toLowerCase();
+  const p = String(prompt || '').toLowerCase().trim();
   const R = S.research, todos = S.todos || [], insp = S.inspiration.items || [];
   const undone = (todos || []).filter(t => !t.done);
+  const hasAiCfg = !!(S.settings.ai && (S.settings.ai.api || S.settings.ai.key));
   if (image) {
     if (sources.length) {
       const list = sources.map((s, i) => (i + 1) + '. 「' + (s.title || '资料') + '」' + (s.url ? ('\n   🔗 ' + s.url) : '') + (s.snippet ? ('\n   ' + (s.snippet.length > 140 ? s.snippet.slice(0, 140) + '…' : s.snippet)) : '')).join('\n');
@@ -2424,12 +2425,12 @@ function aiLocal(prompt, sources, image) {
       : '关于你的问题，我联网检索到这些资料供你参考：';
     return intro + '\n' + list + '\n\n（以上为联网检索到的资料。在「设置·联网与 AI」配置大模型接口后，我可以基于这些资料为你做总结、对比与引用。）';
   }
-  if (/资料|文献|找|搜索|search|paper|reference/.test(p)) {
-    const papers = (R.papers || []).slice(0, 5).map(x => '· 《' + (x.title || '未命名') + '》' + (x.venue ? '（' + x.venue + '）' : '')).join('\n');
-    const ins = (insp || []).slice(0, 3).map(x => '· ' + (x.text || '').slice(0, 30)).join('\n');
-    return '为你整理了现有资料：\n文献库（' + (R.papers || []).length + ' 篇）：\n' + (papers || '（暂无）') + '\n灵感（' + (insp || []).length + ' 条）：\n' + (ins || '（暂无）') + '\n\n需要我按主题筛选，或帮你起草文献检索式吗？';
-  }
-  if (/待办|今日|任务|todo|今天|安排/.test(p)) {
+  // 精准匹配："今天的天气"不应再被当作"今日任务"
+  const todosK = /待办|任务|todo|to-do|to do/.test(p);
+  const todayK = /(今[天日]|今日).{0,4}(要|该|安排|任务|待办|做啥|做什么|干啥|搞什么|完成)/.test(p)
+              || /(待办|任务|安排).{0,4}(今[天日]|今日)/.test(p);
+  // 精准意图优先于宽泛"文献"匹配（如"写综述提纲"应走 OUTLINE）
+  if (todosK || todayK) {
     const td = undone.slice(0, 8).map(t => '· ' + t.title).join('\n');
     return '你当前有 ' + undone.length + ' 条未完成待办：\n' + (td || '（都很棒，已清空）') + '\n\n要不要我帮你按紧急度排个序？';
   }
@@ -2437,13 +2438,26 @@ function aiLocal(prompt, sources, image) {
     const ks = (R.papers || []).slice(0, 5).map((x, i) => (i + 1) + '. ' + (x.title || '文献' + (i + 1))).join('\n');
     return '一份文献综述提纲草稿：\n1. 研究背景与意义\n2. 国内外研究现状\n3. 主要方法对比\n   ' + ((ks || '（先去「文献库」添加几篇文献，我再来细化）').split('\n').join('\n   ')) + '\n4. 研究 gaps 与本文贡献\n5. 总结与展望\n\n告诉我你的主题，我帮你填充每节要点。';
   }
+  if (/资料|文献|找|搜索|search|paper|reference/.test(p)) {
+    const papers = (R.papers || []).slice(0, 5).map(x => '· 《' + (x.title || '未命名') + '》' + (x.venue ? '（' + x.venue + '）' : '')).join('\n');
+    const ins = (insp || []).slice(0, 3).map(x => '· ' + (x.text || '').slice(0, 30)).join('\n');
+    return '为你整理了现有资料：\n文献库（' + (R.papers || []).length + ' 篇）：\n' + (papers || '（暂无）') + '\n灵感（' + (insp || []).length + ' 条）：\n' + (ins || '（暂无）') + '\n\n需要我按主题筛选，或帮你起草文献检索式吗？';
+  }
   if (/周报|总结|日报|复盘|weekly|小结/.test(p)) {
     return '本周小结草稿：\n· 活跃天数：' + (S.activeDays || []).length + ' 天\n· 待办：' + undone.length + ' 条未完成\n· 文献：' + (R.papers || []).length + ' 篇\n· 灵感：' + (insp || []).length + ' 条\n\n需要我按「做了什么 / 收获 / 下一步」展开吗？';
   }
   if (/健康|运动|健身|sleep|睡眠|作息|拉伸/.test(p)) {
     return '健康小建议：保持 25 分钟专注 + 5 分钟起身活动，久坐超过 ' + (S.settings.sitThreshold || 50) + ' 分钟记得拉伸；规律作息有助于深度思考。要不要我帮你排一个今日运动计划？';
   }
-  return '我是你的锦程 AI 助手  离线模式下我基于你的本地数据作答。你可以让我：\n· 查找 / 整理资料与文献\n· 梳理今日待办\n· 起草文献综述提纲或周报\n· 给健康与作息建议\n\n你现在有 ' + undone.length + ' 条待办、' + (R.papers || []).length + ' 篇文献、' + (insp || []).length + ' 条灵感。想从哪开始？';
+  // 未匹配意图 + AI 已配置但调用失败 → 给排查诊断
+  if (USE_API && hasAiCfg && lastErr) {
+    return '本次未能得到 AI 回复（接口类型：' + (aiProv === 'gemini' ? 'Google Gemini' : 'OpenAI 兼容') + '）。\n\n系统收到的错误：\n· ' + lastErr + '\n\n排查建议：\n1) 「设置·联网与AI」里接口地址/密钥是否正确（DeepSeek 接口 https://api.deepseek.com/v1/chat/completions 、模型 deepseek-chat）\n2) 浏览器跨域（CORS）被拦截时，可在「CORS 代理前缀」填 https://corsproxy.io/? 或自托管代理\n3) 模型名拼写或账号余额（去 https://platform.deepseek.com 查看）\n4) HTTPS 站点不能调 HTTP 接口；密钥前缀是不是 sk-…\n\n我可以基于你的工作台本地数据回答：待办、文献（需联网）、周报、健康作息。';
+  }
+  // 未匹配 + 没配 AI
+  if (USE_API && !hasAiCfg) {
+    return '我没识别出这是个工作台内的问题，且当前没配置 AI 接口。\n\n请到「设置·联网与AI」配置 DeepSeek / Gemini 后再问开放性问题。\n\n我能基于本地数据回答：\n· 待办/今日安排（「待办」、「今天做什么」）\n· 文献/资料检索（开启联网后）\n· 周报/总结\n· 健康作息';
+  }
+  return '我无法连接 AI 服务（当前不是 http/https 页面或浏览器拒绝 fetch），只能基于你工作台本地数据回答。\n\n我能帮你：\n· 待办/今日安排（「待办」「今天做什么」）\n· 文献/资料（需联网）\n· 周报/总结\n· 健康作息建议';
 }
 async function askAI(prompt, sources, image) {
   sources = sources || [];
@@ -2452,6 +2466,7 @@ async function askAI(prompt, sources, image) {
   const webCtx = sources.length ? ('\n\n用户已开启联网搜索，以下是为你检索到的真实资料，请在回答中引用并标注来源链接：\n' + sources.map((s, i) => (i + 1) + '. ' + s.title + (s.url ? ' — ' + s.url : '') + (s.snippet ? '\n   ' + s.snippet : '')).join('\n')) : '';
   const ai = st.ai || {};
   const aiProv = ai.provider || 'openai';
+  let lastErr = '';
   if (USE_API && ((aiProv === 'openai' && ai.api) || (aiProv === 'gemini' && ai.key))) {
     try {
       const sys = '你是「锦程」个人成长工作台的 AI 助手，语气亲切、简洁、实用。' + ctx + (webCtx ? '\n用户开启了联网搜索，请基于检索到的资料作答，并给出可点击的来源链接。' : '') + (image ? '\n用户上传了图片，请结合图片内容作答。' : '');
@@ -2485,9 +2500,11 @@ async function askAI(prompt, sources, image) {
           if (ans) return ans;
         }
       }
-    } catch (e) { /* 联网失败，回退本地 */ }
+    } catch (e) {
+      lastErr = (e && (e.message || e.toString())) || '未知错误（fetch 失败，可能是网络/CORS/接口地址错误）';
+    }
   }
-  return aiLocal(prompt, sources, image);
+  return aiLocal(prompt, sources, image, lastErr, aiProv);
 }
 
 /* ===================== 小树苗显隐 ===================== */
