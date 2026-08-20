@@ -1528,6 +1528,25 @@ function renderSettings() {
         <button class="btn" data-action="importConfig">${ico('import')}导入配置串</button>
         <span class="muted tiny" style="align-self:center">跨设备免重填：本机配好 → 导出 → 新设备导入</span>
       </div>
+      <details class="cfg-example" style="margin-top:8px">
+        <summary class="tiny" style="cursor:pointer;color:#2563eb">查看配置串格式（占位示例，换成你自己的真实值后粘贴到「导入配置串」）</summary>
+        <pre class="tiny" style="white-space:pre-wrap;word-break:break-all;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:8px;padding:10px;margin-top:6px">{
+  "ai": {
+    "api": "https://api.deepseek.com/v1/chat/completions",
+    "key": "sk-你的DeepSeekKey",
+    "model": "deepseek-chat",
+    "provider": "openai",
+    "cors": ""
+  },
+  "gh": {
+    "user": "你的GitHub用户名",
+    "repo": "jincheng-sync",
+    "token": "github_pat_你的令牌",
+    "path": "backup/jincheng-backup.json"
+  }
+}</pre>
+        <p class="tiny" style="margin:6px 0 0">点「导出配置串」会生成包含你真实凭据的串，复制保存好；换设备时打开本页 → 设置 → 导入配置串 → 粘贴，即可一键配置，无需逐项重填。</p>
+      </details>
       <ol class="tiny" style="margin:8px 0 0;padding-left:18px;line-height:1.7">
         <li>GitHub 新建一个<b>私有</b>仓库（如 jincheng-sync）；</li>
         <li>Settings → Developer settings → Personal access tokens → 生成 <b>仅勾 repo</b> 权限的 PAT；</li>
