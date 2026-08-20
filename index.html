@@ -2265,9 +2265,17 @@ async function ghCall(method, apiPath, body) {
     return await res.json();
   } catch (e) { toast('网络错误：' + e.message, 'err'); return null; }
 }
+// GitHub Contents API 的路径规则：段内编码、段间 / 不编码
+function ghPathUrl() {
+  const g = S.settings.gh || {};
+  const u = encodeURIComponent(g.user || '');
+  const r = encodeURIComponent(g.repo || '');
+  const p = (g.path || 'backup/jincheng-backup.json').split('/').map(encodeURIComponent).join('/');
+  return '/repos/' + u + '/' + r + '/contents/' + p;
+}
 async function ghPush() {
   const g = S.settings.gh || {};
-  const apiPath = '/repos/' + encodeURIComponent(g.user) + '/' + encodeURIComponent(g.repo) + '/contents/' + encodeURIComponent(g.path);
+  const apiPath = ghPathUrl();
   const content = btoa(unescape(encodeURIComponent(JSON.stringify({ version: 2, data: S }))));
   const existing = await ghCall('GET', apiPath);
   const body = { message: 'sync ' + new Date().toISOString(), content };
@@ -2277,7 +2285,7 @@ async function ghPush() {
 }
 async function ghPull() {
   const g = S.settings.gh || {};
-  const apiPath = '/repos/' + encodeURIComponent(g.user) + '/' + encodeURIComponent(g.repo) + '/contents/' + encodeURIComponent(g.path);
+  const apiPath = ghPathUrl();
   const r = await ghCall('GET', apiPath);
   if (r === null) return;
   if (!r.content) { toast('该仓库路径还没有备份文件，请先上传一次', 'err'); return; }
@@ -2508,7 +2516,11 @@ function aiLocal(prompt, sources, image, lastErr, aiProv) {
 async function askAI(prompt, sources, image) {
   sources = sources || [];
   const R = S.research, st = S.settings;
-  const ctx = '用户数据摘要：待办' + ((S.todos || []).filter(t => !t.done).length) + ' 条，文献' + (R.papers || []).length + ' 篇，灵感' + (S.inspiration.items || []).length + ' 条，书目' + (S.reading.books || []).length + ' 本，活跃' + (S.activeDays || []).length + ' 天。';
+  const now = new Date();
+  const nowStr = now.toLocaleString('zh-CN', { hour12: false, timeZone: 'Asia/Shanghai' });
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekCn = '星期' + weekDays[now.getDay()];
+  const ctx = '用户数据摘要：待办' + ((S.todos || []).filter(t => !t.done).length) + ' 条，文献' + (R.papers || []).length + ' 篇，灵感' + (S.inspiration.items || []).length + ' 条，书目' + (S.reading.books || []).length + ' 本，活跃' + (S.activeDays || []).length + ' 天。\n当前真实时间：' + nowStr + '（' + weekCn + '，北京时间）。当用户问"今天几号/星期几/几月几日"等日期时，请直接用上面这个时间回答，不要用训练数据中的日期。';
   const webCtx = sources.length ? ('\n\n用户已开启联网搜索，以下是为你检索到的真实资料，请在回答中引用并标注来源链接：\n' + sources.map((s, i) => (i + 1) + '. ' + s.title + (s.url ? ' — ' + s.url : '') + (s.snippet ? '\n   ' + s.snippet : '')).join('\n')) : '';
   const ai = st.ai || {};
   const aiProv = ai.provider || 'openai';
