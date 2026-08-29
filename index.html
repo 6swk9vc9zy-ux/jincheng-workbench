@@ -970,8 +970,10 @@ function showNoticeBanner(){
 
 var PWD_VISIBLE = {};
 const PROTO = location.protocol;
-const USE_API = (PROTO === 'http:' || PROTO === 'https:');
+// 仅当真正配置了后端 API 地址时才启用 API 模式；默认（API 为空，含 https 部署）走本地 localStorage，
+// 否则会向不存在的 /api/state 发请求且 404 不抛错，导致 save() 提前 return、数据永不落盘。
 const API = '';
+const USE_API = !!API;
 const $  = (sel, ctx) => (ctx || document).querySelector(sel);
 const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
 const uid = () => 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1185,6 +1187,9 @@ async function loadData() {
   try {
     const raw = localStorage.getItem(dataKey());
     if (raw) return migrate(JSON.parse(raw));
+    const seeded = SEEDED_STATE();
+    try { localStorage.setItem(dataKey(), JSON.stringify(seeded)); } catch (e) {}
+    return seeded;
   } catch (e) {}
   return SEEDED_STATE();
 }
@@ -2477,6 +2482,7 @@ async function handleForm(fBtn) {
       if (!name.trim()) { delete S.courses.grid[cell]; } else { S.courses.grid[cell] = { name, teacher: v('f_teacher'), room: v('f_room'), time: v('f_time'), note: v('f_note') }; }
       save(); render(); closeModal(); toast('已保存', 'ok'); return;
     } else if (act === 'hw') {
+      const item = id ? (S.coursesHomework || []).find(x => x.id === id) : null;
       obj = { id, title: v('f_title'), course: v('f_course'), due: v('f_due'), done: (item && item.done) || false };
     } else if (act === 'bib') {
       parseBib(v('f_bib')); save(); render(); closeModal(); toast('已导入文献', 'ok'); return;
